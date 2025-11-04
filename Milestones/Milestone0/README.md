@@ -14,8 +14,8 @@ Complementing this, the **Desktop doctor portal**, provides healthcare professio
 
 - Connect **patients** and **doctors** through a digital platform.
 - Provide:
-  - A **mobile app for patients** (Android/iOS).
-  - A **web app for doctors** (browser-based).
+  - A **patient interface** (mobile-first web).
+  - A **doctor interface** (desktop-focused web).
   - A **cloud backend** that exposes APIs for both frontends.
 - This repository focuses mainly on the **frontend side**; the backend is planned/maintained separately.
 
@@ -25,15 +25,15 @@ Complementing this, the **Desktop doctor portal**, provides healthcare professio
 
 Per project specification:
 
-- **Frontend – Patient (Mobile)**  
-  - iPhone/Android mobile-ready app (Next.js).  
-  - Handles patient-facing flows (e.g. login, appointments, basic information).
+- **Frontend – Unified Web (Next.js)**  
+  - One Next.js application with role-based areas, e.g.:  
+    - `/patient/login`, `/patient/home`, `/patient/booking`, `/patient/appointments`, `/patient/profile`  
+    - `/doctor/login`, `/doctor/dashboard`, `/doctor/patients`  
+  - Responsive layout so that:
+    - Patients get a **mobile-first** experience.
+    - Doctors get a **desktop-friendly** view (wider layouts, tables, etc.).
 
-- **Frontend – Doctor (Web)**  
-  - Browser-based web application (React).  
-  - Provides views on patients and appointments and supports doctor workflows.
-
-- **Middle/Backend**
+- **Middle/Backend**  
   - Containerized services in the cloud.  
   - Exposes HTTP/JSON APIs consumed by both frontends.
 
@@ -43,18 +43,15 @@ Per project specification:
 
 | Layer                    | Technology                              | Reason                                                                                              |
 |--------------------------|-----------------------------------------|-----------------------------------------------------------------------------------------------------|
-| Frontend (Mobile)        | TypeScript + React (Next.js)               | Single codebase for iOS and Android, strong type safety;                                            |
-| Frontend (Doctor Web)    | TypeScript + React (Next.js)            | Shared language and patterns with the mobile app; modern web framework for the doctor-facing portal;|
-| Framework tools (Mobile) | DevTools mobile view                                   | Simplified setup, testing and deployment for the mobile prototype;                                  |
+| Frontend (unified)       | TypeScript + React (Next.js)            | Single responsive web app for both patient and doctor; modern web tooling and fast iteration        |
 | Version control          | GitHub                                  | Centralized repo for code and documentation;                                                        |
 | Design tools             | MS Word prototypes                      | Simple visual prototypes and user flows;                                                            |
-| Backend                  | Containerized services in the cloud     | Scalable and deployable middle layer (implementation details TBD);                                  |
 
 -
 
 ## 4. Repository Structure (planned)
 
 ```text
-/mobile        # Patient mobile app (React (Next.js)  + TypeScript)
+/mobile        # Patient mobile app (React Native + TypeScript + Expo)
 /doctor-web    # Doctor web app (TypeScript + React + Next.js) – planned
 /docs          # Project documentation, diagrams, plans
