@@ -1,42 +1,56 @@
 // app/patient/page.tsx
 "use client";
+
 import { Button } from "@heroui/button";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Chip } from "@heroui/chip";
 import { Navbar, NavbarBrand, NavbarContent, NavbarItem } from "@heroui/navbar";
 import Link from "next/link";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { useAuth } from "@/lib/auth/auth-context";
 
 export default function PatientDashboardPage() {
-  return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <Navbar maxWidth="full">
-        <NavbarBrand>
-          <span className="font-semibold text-lg">Patient Portal</span>
-        </NavbarBrand>
-        <NavbarContent className="hidden sm:flex gap-4" justify="center">
-          <NavbarItem>
-            <Link href="/">Home</Link>
-          </NavbarItem>
-          <NavbarItem isActive>
-            <span className="text-primary">Dashboard</span>
-          </NavbarItem>
-        </NavbarContent>
-        <NavbarContent justify="end">
-          <NavbarItem>
-            <Button
-              as={Link}
-              href="/doctor"
-              variant="light"
-              size="sm"
-            >
-              Switch to Doctor
-            </Button>
-          </NavbarItem>
-        </NavbarContent>
-      </Navbar>
+  const { user, logout } = useAuth();
 
-      <main className="flex-1 px-6 py-6 md:px-10 md:py-8 space-y-6">
-        <section className="grid gap-4 md:grid-cols-[2fr,1.2fr]">
+  return (
+    <ProtectedRoute allowRoles={["patient"]}>
+      <div className="flex min-h-screen flex-col bg-background">
+        <Navbar maxWidth="full">
+          <NavbarBrand className="flex flex-col">
+            <span className="font-semibold text-lg">Patient Portal</span>
+            <span className="text-xs text-default-500">
+              Welcome back, {user?.name || "Patient"}
+            </span>
+          </NavbarBrand>
+          <NavbarContent className="hidden gap-4 sm:flex" justify="center">
+            <NavbarItem>
+              <Link href="/">Home</Link>
+            </NavbarItem>
+            <NavbarItem isActive>
+              <span className="text-primary">Dashboard</span>
+            </NavbarItem>
+          </NavbarContent>
+          <NavbarContent justify="end">
+            <NavbarItem>
+              <Button
+                variant="light"
+                size="sm"
+                color="danger"
+                onPress={logout}
+              >
+                Sign out
+              </Button>
+            </NavbarItem>
+            <NavbarItem>
+              <Button as={Link} href="/doctor" variant="light" size="sm">
+                Switch to Doctor
+              </Button>
+            </NavbarItem>
+          </NavbarContent>
+        </Navbar>
+
+        <main className="flex-1 px-6 py-6 md:px-10 md:py-8 space-y-6">
+          <section className="grid gap-4 md:grid-cols-[2fr,1.2fr]">
           {/* Next appointment */}
           <Card>
             <CardHeader className="flex items-center justify-between gap-2">
@@ -56,8 +70,8 @@ export default function PatientDashboardPage() {
                 (Family Medicine)
               </p>
               <div className="grid gap-3 sm:grid-cols-3 text-sm">
-                <InfoItem label="Date" value="Tue, Jan 21 · 09:30" />
-                <InfoItem label="Location" value="Clinic A · Room 204" />
+                <InfoItem label="Date" value="Tue, Jan 21 - 09:30" />
+                <InfoItem label="Location" value="Clinic A - Room 204" />
                 <InfoItem label="Reason" value="Routine checkup" />
               </div>
               <div className="flex gap-3 flex-wrap mt-2">
@@ -91,13 +105,20 @@ export default function PatientDashboardPage() {
               />
             </CardBody>
           </Card>
-        </section>
-      </main>
-    </div>
+          </section>
+        </main>
+      </div>
+    </ProtectedRoute>
   );
 }
 
-function InfoItem({ label, value }: { label: string; value: string }) {
+type InfoItemProps = {
+  label: string;
+  value: string;
+};
+
+function InfoItem(props: InfoItemProps) {
+  const { label, value } = props;
   return (
     <div className="flex flex-col">
       <span className="text-xs uppercase tracking-wide text-default-500">
@@ -108,13 +129,13 @@ function InfoItem({ label, value }: { label: string; value: string }) {
   );
 }
 
-function QuickAction({
-  title,
-  description,
-}: {
+type QuickActionProps = {
   title: string;
   description: string;
-}) {
+};
+
+function QuickAction(props: QuickActionProps) {
+  const { title, description } = props;
   return (
     <button className="w-full rounded-xl border border-default-100 bg-content1/70 px-3 py-3 text-left transition hover:border-primary hover:bg-primary/5">
       <p className="text-sm font-medium">{title}</p>

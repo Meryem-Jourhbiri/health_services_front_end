@@ -1,19 +1,22 @@
 // app/doctor/page.tsx
 "use client";
+
 import { Avatar } from "@heroui/avatar";
 import { Button } from "@heroui/button";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Chip } from "@heroui/chip";
 import { Navbar, NavbarBrand, NavbarContent, NavbarItem } from "@heroui/navbar";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableColumn,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
 } from "@heroui/table";
 import Link from "next/link";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { useAuth } from "@/lib/auth/auth-context";
 
 const appointments = [
   {
@@ -40,8 +43,11 @@ const appointments = [
 ];
 
 export default function DoctorDashboardPage() {
+  const { user, logout } = useAuth();
+
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <ProtectedRoute allowRoles={["doctor"]}>
+      <div className="flex min-h-screen flex-col bg-background">
       <Navbar maxWidth="full">
         <NavbarBrand>
           <span className="font-semibold text-lg">Doctor Portal</span>
@@ -57,6 +63,16 @@ export default function DoctorDashboardPage() {
         <NavbarContent justify="end">
           <NavbarItem>
             <Button
+              variant="light"
+              size="sm"
+              color="danger"
+              onPress={logout}
+            >
+              Sign out
+            </Button>
+          </NavbarItem>
+          <NavbarItem>
+            <Button
               as={Link}
               href="/patient"
               variant="light"
@@ -67,7 +83,7 @@ export default function DoctorDashboardPage() {
           </NavbarItem>
           <NavbarItem>
             <Avatar
-              name="Dr. Lee"
+              name={user?.name || "Doctor"}
               size="sm"
               className="bg-primary/20 text-primary-foreground"
             />
@@ -141,11 +157,18 @@ export default function DoctorDashboardPage() {
           </Card>
         </section>
       </main>
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
+type StatCardProps = {
+  label: string;
+  value: string;
+};
+
+function StatCard(props: StatCardProps) {
+  const { label, value } = props;
   return (
     <Card>
       <CardHeader className="flex flex-col items-start gap-1">
@@ -158,7 +181,12 @@ function StatCard({ label, value }: { label: string; value: string }) {
   );
 }
 
-function StatusChip({ status }: { status: string }) {
+type StatusChipProps = {
+  status: string;
+};
+
+function StatusChip(props: StatusChipProps) {
+  const { status } = props;
   const map: Record<
     string,
     { color: "success" | "warning" | "danger" | "default"; label: string }

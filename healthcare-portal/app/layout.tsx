@@ -1,5 +1,6 @@
 // app/layout.tsx
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import "./globals.css";
 import { Providers } from "./providers";
 
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     // Add "dark" here to enable HeroUI’s dark theme; use "light" or toggle class later if you want

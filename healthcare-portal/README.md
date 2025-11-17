@@ -1,5 +1,25 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Shared Authentication Flows
+
+Milestone 1 introduces login + recovery flows shared by doctors and patients:
+
+- `/login` – unified sign-in with role-aware redirects.
+- `/signup` – patient-only registration that sends users to `/verify-email`.
+- `/forgot-password` and `/reset-password` – password recovery.
+- `/verify-email` – pending/success/expired states.
+- `/patient` and `/doctor` – protected dashboards (each wrapped in a `<ProtectedRoute>`).
+
+### Local API configuration
+
+Create `.env.local` to point to the backend (falls back to mock responses if absent):
+
+```
+NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
+```
+
+With the env var unset, the UI still works via mock responses so flows are testable without the API.
+
 ## Getting Started
 
 First, run the development server:
