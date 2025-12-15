@@ -29,6 +29,9 @@ export default function PatientDashboardPage() {
             <NavbarItem isActive>
               <span className="text-primary">Dashboard</span>
             </NavbarItem>
+             <NavbarItem>
+               <Link href="/patient/profile">Profile</Link>
+             </NavbarItem>
           </NavbarContent>
           <NavbarContent justify="end">
             <NavbarItem>

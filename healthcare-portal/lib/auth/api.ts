@@ -59,7 +59,18 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
+// Backend login response (Omar)
+type BackendLoginResponse = {
+  token: string;
+  type?: string; // "Bearer"
+  userId: string;
+  email: string;
+  role: string; // "PATIENT" | "DOCTOR"
+  message?: string;
+};
+
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
+  // Mock mode (kad nema env var)
   if (!API_BASE_URL) {
     await wait();
     if (!payload.email || !payload.password) {
@@ -72,10 +83,26 @@ export async function login(payload: LoginPayload): Promise<LoginResponse> {
     };
   }
 
-  return request<LoginResponse>("/auth/login", {
+  // Real backend
+  const backend = await request<BackendLoginResponse>("/api/auth/login", {
     method: "POST",
     body: JSON.stringify(payload),
   });
+
+  const role: UserRole =
+    backend.role?.toLowerCase() === "doctor" ? "doctor" : "patient";
+
+  return {
+    token: backend.token,
+    user: {
+      id: backend.userId,
+      email: backend.email,
+      role,
+      name: backend.email?.split("@")[0] ?? "User",
+      // backend ti je dozvolio login => email je verifikovan / user enabled
+      emailVerified: true,
+    },
+  };
 }
 
 export async function register(
@@ -90,7 +117,7 @@ export async function register(
     return { message: "Mock account created. Check your inbox to verify." };
   }
 
-  return request<GenericResponse>("/auth/register", {
+  return request<GenericResponse>("/api/auth/register", {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -111,7 +138,7 @@ export async function requestPasswordReset(
     };
   }
 
-  return request<GenericResponse>("/auth/password/forgot", {
+  return request<GenericResponse>("/api/auth/forgot-password", {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -129,7 +156,7 @@ export async function resetPassword(
     return { message: "Mock password reset complete." };
   }
 
-  return request<GenericResponse>("/auth/password/reset", {
+  return request<GenericResponse>("/api/auth/reset-password", {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -147,8 +174,9 @@ export async function verifyEmail(
     return { message: "Email verified." };
   }
 
-  return request<GenericResponse>("/auth/verify-email", {
+  return request<GenericResponse>("/api/auth/verify-email", {
     method: "POST",
     body: JSON.stringify(payload),
   });
 }
+
