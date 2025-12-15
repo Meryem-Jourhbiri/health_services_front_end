@@ -27,9 +27,6 @@ export function DashboardNavbar(props: DashboardNavbarProps) {
         <span className="font-semibold text-lg">{title}</span>
       </NavbarBrand>
       <NavbarContent className="hidden gap-4 sm:flex" justify="center">
-        <NavbarItem>
-          <Link href="/">Home</Link>
-        </NavbarItem>
         <NavbarItem isActive>
           <span className="text-primary">Dashboard</span>
         </NavbarItem>
