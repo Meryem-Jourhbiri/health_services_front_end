@@ -5,16 +5,30 @@ import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Input } from "@heroui/input";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get("next");
+  const presetEmail = searchParams.get("email") ?? "";
+  const presetPassword = searchParams.get("password") ?? "";
   const { login, isSubmitting } = useAuth();
-  const [formValues, setFormValues] = useState({ email: "", password: "" });
+  const [formValues, setFormValues] = useState({
+    email: presetEmail,
+    password: presetPassword,
+  });
   const [error, setError] = useState<string | null>(null);
+
+  const presetDeps = useMemo(
+    () => ({ email: presetEmail, password: presetPassword }),
+    [presetEmail, presetPassword],
+  );
+
+  useEffect(() => {
+    setFormValues(presetDeps);
+  }, [presetDeps]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;

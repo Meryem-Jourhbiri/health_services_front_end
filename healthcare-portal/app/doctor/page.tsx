@@ -15,6 +15,7 @@ import {
   TableRow,
 } from "@heroui/table";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/lib/auth/auth-context";
 
@@ -44,9 +45,15 @@ const appointments = [
 
 export default function DoctorDashboardPage() {
   const { user, logout } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    logout();
+    router.replace("/");
+  };
 
   return (
-    <ProtectedRoute allowRoles={["doctor"]}>
+    <ProtectedRoute allowRoles={["doctor"]} unauthenticatedRedirect="/">
       <div className="flex min-h-screen flex-col bg-background">
       <Navbar maxWidth="full">
         <NavbarBrand>
@@ -66,7 +73,7 @@ export default function DoctorDashboardPage() {
               variant="light"
               size="sm"
               color="danger"
-              onPress={logout}
+              onPress={handleLogout}
             >
               Sign out
             </Button>

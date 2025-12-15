@@ -6,14 +6,21 @@ import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Chip } from "@heroui/chip";
 import { Navbar, NavbarBrand, NavbarContent, NavbarItem } from "@heroui/navbar";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { useAuth } from "@/lib/auth/auth-context";
 
 export default function PatientDashboardPage() {
   const { user, logout } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    logout();
+    router.replace("/");
+  };
 
   return (
-    <ProtectedRoute allowRoles={["patient"]}>
+    <ProtectedRoute allowRoles={["patient"]} unauthenticatedRedirect="/">
       <div className="flex min-h-screen flex-col bg-background">
         <Navbar maxWidth="full">
           <NavbarBrand className="flex flex-col">
@@ -36,7 +43,7 @@ export default function PatientDashboardPage() {
                 variant="light"
                 size="sm"
                 color="danger"
-                onPress={logout}
+                onPress={handleLogout}
               >
                 Sign out
               </Button>
