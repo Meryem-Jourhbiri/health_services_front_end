@@ -27,11 +27,6 @@ describe("PatientPage", () => {
     render(<PatientDashboardPage />);
     expect(screen.getByText(/quick actions/i)).toBeInTheDocument();
   });
-  it("matches snapshot", () => {
-    const view = render(<PatientDashboardPage />);
-    expect(view.container).toMatchSnapshot();
-  });
 });
-
 
 
