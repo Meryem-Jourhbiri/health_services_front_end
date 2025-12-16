@@ -15,7 +15,7 @@ import {
 import { ApiError } from "@/lib/auth/api";
 
 export default function PatientProfilePage() {
-  const { token } = useAuth();
+  const { token, isHydrating } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -33,33 +33,44 @@ export default function PatientProfilePage() {
   useEffect(() => {
     let alive = true;
 
-    async function load() {
-      setLoading(true);
-      setError(null);
-      setSuccess(null);
+  async function load() {
+  
+  if (isHydrating) return;
 
-      try {
-        const data = await getPatientProfile(token);
-        if (!alive) return;
+  
+  if (!token) {
+    setLoading(false);
+    setError("Not authenticated. Please log in again.");
+    return;
+  }
 
-        setServerProfile(data);
-        setForm(data);
-        setMedicalHistoryText(JSON.stringify(data.medicalHistory ?? {}, null, 2));
-      } catch (e) {
-        if (!alive) return;
-        const message =
-          e instanceof ApiError ? e.message : "Failed to load profile.";
-        setError(message);
-      } finally {
-        if (alive) setLoading(false);
-      }
-    }
+  setLoading(true);
+  setError(null);
+  setSuccess(null);
+
+  try {
+    const data = await getPatientProfile(token);
+    if (!alive) return;
+
+    setServerProfile(data);
+    setForm(data);
+    setMedicalHistoryText(JSON.stringify(data.medicalHistory ?? {}, null, 2));
+  } catch (e) {
+    if (!alive) return;
+    const message =
+      e instanceof ApiError ? e.message : "Failed to load profile.";
+    setError(message);
+  } finally {
+    if (alive) setLoading(false);
+  }
+}
+
 
     load();
     return () => {
       alive = false;
     };
-  }, [token]);
+  }, [token, isHydrating]);
 
   const isDirty = useMemo(() => {
     if (!serverProfile || !form) return false;
