@@ -26,6 +26,12 @@ export default function PatientDashboardPage() {
           onLogout={handleLogout}
           avatarLabel={user?.name || "Patient"}
           userName={user?.name || "Patient"}
+          links={[
+             { href: "/", label: "Home" },
+             { href: "/patient", label: "Dashboard" },
+             { href: "/patient/profile", label: "Profile" },
+        ]}
+
         />
 
         <main className="flex-1 px-6 py-6 md:px-10 md:py-8 space-y-6">
