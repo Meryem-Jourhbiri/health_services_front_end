@@ -19,17 +19,20 @@ jest.mock("@/lib/auth/auth-context", () => ({
 import SignupPage from "@/app/signup/page";
 
 describe("SignupPage", () => {
-  it("renders name, email, password fields and a submit button", () => {
+  it("renders required patient fields and a submit button", () => {
     render(<SignupPage />);
 
-    expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/last name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/phone/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/gender/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/date of birth/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
 
     const submitButton = screen.getByRole("button", { name: /create account/i });
     expect(submitButton).toBeInTheDocument();
   });
 });
-
 
 

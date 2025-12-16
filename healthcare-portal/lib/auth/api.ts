@@ -1,3 +1,5 @@
+//HTTP Layer 
+
 import type {
   AuthUser,
   ForgotPasswordPayload,
@@ -7,10 +9,9 @@ import type {
   RegisterPayload,
   ResetPasswordPayload,
   UserRole,
-  VerifyEmailPayload,
 } from "./types";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_BASE_URL = 'http://localhost:8080';
 
 export class ApiError extends Error {
   status: number;
@@ -22,7 +23,7 @@ export class ApiError extends Error {
   }
 }
 
-const wait = (ms = 700) => new Promise((resolve) => setTimeout(resolve, ms));
+const wait = (ms = 800) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const inferRoleFromEmail = (email: string): UserRole =>
   email.toLowerCase().includes("doctor") ? "doctor" : "patient";
@@ -38,8 +39,21 @@ const mockUser = (email: string): AuthUser => {
   };
 };
 
+const sanitizeBaseUrl = (base: string | undefined) =>
+  base ? base.replace(/\/$/, "") : base;
+
+const BASE_URL = sanitizeBaseUrl(API_BASE_URL);
+
+// Helper to attach Authorization header for protected calls
+export const authHeaders = (token: string | null | undefined) =>
+  token
+    ? {
+        Authorization: `Bearer ${token}`,
+      }
+    : {};
+
 async function request<T>(path: string, init: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(`${BASE_URL}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -48,8 +62,17 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    const message = await response.text();
-    throw new ApiError(message || "Request failed", response.status);
+    let message = "Request failed";
+    try {
+      const data = await response.json();
+      message =
+        (data as { message?: string; error?: string }).message ||
+        (data as { message?: string; error?: string }).error ||
+        message;
+    } catch {
+      message = (await response.text()) || message;
+    }
+    throw new ApiError(message, response.status);
   }
 
   if (response.status === 204) {
@@ -59,8 +82,19 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
+type BackendLoginResponse = {
+  token: string;
+  type?: string;
+  userId: string;
+  email: string;
+  role: string;
+  message?: string;
+};
+
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
-  if (!API_BASE_URL) {
+  console.log('here');
+  console.log(payload);
+  if (!BASE_URL) {
     await wait();
     if (!payload.email || !payload.password) {
       throw new ApiError("Email and password are required.");
@@ -72,34 +106,88 @@ export async function login(payload: LoginPayload): Promise<LoginResponse> {
     };
   }
 
-  return request<LoginResponse>("/auth/login", {
+  const response = await request<BackendLoginResponse>("/api/auth/login", {
     method: "POST",
     body: JSON.stringify(payload),
   });
+
+  const normalizedRole = response.role?.toLowerCase();
+  const role =
+    normalizedRole === "doctor"
+      ? "doctor"
+      : normalizedRole === "admin"
+        ? "admin"
+        : "patient";
+  const user: AuthUser = {
+    id: response.userId,
+    email: response.email,
+    role,
+    name: response.email,
+    emailVerified: true,
+  };
+
+  return { token: response.token, user };
 }
 
 export async function register(
   payload: RegisterPayload,
 ): Promise<GenericResponse> {
-  if (!API_BASE_URL) {
+  console.log('here');
+  console.log(payload);
+  if (!BASE_URL) {
     await wait();
-    if (!payload.name || !payload.email || !payload.password) {
-      throw new ApiError("All fields are required.");
+    if (
+      !payload.firstName ||
+      !payload.lastName ||
+      !payload.email ||
+      !payload.password ||
+      !payload.phone ||
+      !payload.gender ||
+      !payload.dob
+    ) {
+      throw new ApiError("All required fields are needed.");
     }
 
     return { message: "Mock account created. Check your inbox to verify." };
   }
 
-  return request<GenericResponse>("/auth/register", {
+  console.log('here');
+
+  const backendRole =
+    payload.role === "doctor"
+      ? "DOCTOR"
+      : payload.role === "patient"
+        ? "PATIENT"
+        : payload.role === "admin"
+          ? "ADMIN"
+          : payload.role.toUpperCase();
+
+  const body = {
+    email: payload.email,
+    password: payload.password,
+    role: backendRole,
+    firstName: payload.firstName,
+    lastName: payload.lastName,
+    phone: payload.phone,
+    gender: payload.gender,
+    dob: payload.dob,
+    licenseNumber: payload.licenseNumber,
+    specialization: payload.specialization,
+    experience: payload.experience,
+  };
+
+  console.log('body');
+
+  return request<GenericResponse>("/api/auth/register", {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: JSON.stringify(body),
   });
 }
 
 export async function requestPasswordReset(
   payload: ForgotPasswordPayload,
 ): Promise<GenericResponse> {
-  if (!API_BASE_URL) {
+  if (!BASE_URL) {
     await wait();
     if (!payload.email) {
       throw new ApiError("Email is required.");
@@ -111,16 +199,20 @@ export async function requestPasswordReset(
     };
   }
 
-  return request<GenericResponse>("/auth/password/forgot", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+  return request<GenericResponse>(
+    `api/auth/forgot-password?email=${encodeURIComponent(payload.email)}`,
+    {
+      method: "POST",
+      // backend reads query param; body not required
+      body: undefined,
+    },
+  );
 }
 
 export async function resetPassword(
   payload: ResetPasswordPayload,
 ): Promise<GenericResponse> {
-  if (!API_BASE_URL) {
+  if (!BASE_URL) {
     await wait();
     if (!payload.token || !payload.password) {
       throw new ApiError("Token and password are required.");
@@ -129,26 +221,30 @@ export async function resetPassword(
     return { message: "Mock password reset complete." };
   }
 
-  return request<GenericResponse>("/auth/password/reset", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+  return request<GenericResponse>(
+    `api/auth/reset-password?token=${encodeURIComponent(payload.token)}&newPassword=${encodeURIComponent(payload.password)}`,
+    {
+      method: "POST",
+      body: undefined,
+    },
+  );
 }
 
-export async function verifyEmail(
-  payload: VerifyEmailPayload,
-): Promise<GenericResponse> {
-  if (!API_BASE_URL) {
+export async function verifyEmail(token: string): Promise<GenericResponse> {
+  if (!BASE_URL) {
     await wait();
-    if (!payload.token) {
+    if (!token) {
       throw new ApiError("Verification token missing.");
     }
 
     return { message: "Email verified." };
   }
 
-  return request<GenericResponse>("/auth/verify-email", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+  return request<GenericResponse>(
+    `api/verify-email?token=${encodeURIComponent(token)}`,
+    {
+      method: "POST",
+      body: undefined,
+    },
+  );
 }

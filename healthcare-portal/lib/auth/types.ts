@@ -1,4 +1,4 @@
-export type UserRole = "patient" | "doctor";
+export type UserRole = "patient" | "doctor" | "admin";
 
 export type AuthUser = {
   id: string;
@@ -14,9 +14,18 @@ export type LoginPayload = {
 };
 
 export type RegisterPayload = {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
+  phone: string;
+  gender: string;
+  dob: string; // YYYY-MM-DD
+  role: UserRole;
+  // Doctor-specific fields (optional for now)
+  licenseNumber?: string;
+  specialization?: string;
+  experience?: number;
 };
 
 export type ForgotPasswordPayload = {
