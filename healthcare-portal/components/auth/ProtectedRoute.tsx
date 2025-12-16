@@ -7,11 +7,13 @@ import type { UserRole } from "@/lib/auth/types";
 
 type ProtectedRouteProps = {
   allowRoles?: UserRole[];
+  unauthenticatedRedirect?: string;
   children: React.ReactNode;
 };
 
 export function ProtectedRoute({
   allowRoles,
+  unauthenticatedRedirect = "/login",
   children,
 }: ProtectedRouteProps) {
   const router = useRouter();
@@ -35,7 +37,7 @@ export function ProtectedRoute({
     }
 
     if (!isAuthenticated) {
-      router.replace("/login");
+      router.replace(unauthenticatedRedirect);
       return;
     }
 
