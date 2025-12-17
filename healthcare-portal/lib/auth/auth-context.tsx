@@ -1,3 +1,5 @@
+// Shared AUTH brain 
+
 "use client";
 
 import {
@@ -114,7 +116,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = useCallback(async (payload: RegisterPayload) => {
     setIsSubmitting(true);
     try {
+      console.log('done');
       await registerRequest(payload);
+      console.log('done');
       setVerificationEmail(payload.email);
     } catch (error) {
       const message =
@@ -168,7 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const verifyEmail = useCallback(async (token: string) => {
     setIsSubmitting(true);
     try {
-      await verifyEmailRequest({ token });
+      await verifyEmailRequest(token);
     } catch (error) {
       const message =
         error instanceof ApiError

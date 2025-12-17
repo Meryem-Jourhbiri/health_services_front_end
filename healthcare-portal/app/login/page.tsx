@@ -41,7 +41,12 @@ export default function LoginPage() {
 
     try {
       const user = await login(formValues);
-      const fallback = user.role === "doctor" ? "/doctor" : "/patient";
+      const fallback =
+        user.role === "doctor"
+          ? "/doctor"
+          : user.role === "patient"
+            ? "/patient"
+            : "/";
       router.replace(redirectPath || fallback);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to log in.");
