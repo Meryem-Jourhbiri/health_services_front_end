@@ -10,38 +10,56 @@ import {
   NavbarItem,
 } from "@heroui/navbar";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+type NavLink = {
+  href: string;
+  label: string;
+};
 
 type DashboardNavbarProps = {
   title: string;
   onLogout: () => void;
   avatarLabel?: string | null;
   userName?: string | null;
+  links?: NavLink[];
 };
 
 export function DashboardNavbar(props: DashboardNavbarProps) {
-  const { title, onLogout, avatarLabel, userName } = props;
+  const { title, onLogout, avatarLabel, userName, links = [] } = props;
+  const pathname = usePathname();
 
   return (
     <Navbar maxWidth="full">
       <NavbarBrand>
         <span className="font-semibold text-lg">{title}</span>
       </NavbarBrand>
+
       <NavbarContent className="hidden gap-4 sm:flex" justify="center">
-        <NavbarItem isActive>
-          <span className="text-primary">Dashboard</span>
-        </NavbarItem>
+        {links.map((l) => (
+          <NavbarItem key={l.href} isActive={pathname === l.href}>
+            {pathname === l.href ? (
+              <span className="text-primary">{l.label}</span>
+            ) : (
+              <Link href={l.href}>{l.label}</Link>
+            )}
+          </NavbarItem>
+        ))}
       </NavbarContent>
+
       <NavbarContent justify="end">
         <NavbarItem>
           <Button variant="light" size="sm" color="danger" onPress={onLogout}>
             Sign out
           </Button>
         </NavbarItem>
+
         {userName ? (
           <NavbarItem>
             <span className="text-sm font-medium">{userName}</span>
           </NavbarItem>
         ) : null}
+
         {avatarLabel ? (
           <NavbarItem>
             <Avatar
@@ -55,3 +73,4 @@ export function DashboardNavbar(props: DashboardNavbarProps) {
     </Navbar>
   );
 }
+

@@ -82,19 +82,34 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
+<<<<<<< HEAD
+// Backend login response (Omar)
+type BackendLoginResponse = {
+  token: string;
+  type?: string; // "Bearer"
+  userId: string;
+  email: string;
+  role: string; // "PATIENT" | "DOCTOR"
+=======
 type BackendLoginResponse = {
   token: string;
   type?: string;
   userId: string;
   email: string;
   role: string;
+>>>>>>> origin/main
   message?: string;
 };
 
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
+<<<<<<< HEAD
+  // Mock mode (kad nema env var)
+  if (!API_BASE_URL) {
+=======
   console.log('here');
   console.log(payload);
   if (!BASE_URL) {
+>>>>>>> origin/main
     await wait();
     if (!payload.email || !payload.password) {
       throw new ApiError("Email and password are required.");
@@ -106,11 +121,32 @@ export async function login(payload: LoginPayload): Promise<LoginResponse> {
     };
   }
 
+<<<<<<< HEAD
+  // Real backend
+  const backend = await request<BackendLoginResponse>("/api/auth/login", {
+=======
   const response = await request<BackendLoginResponse>("/api/auth/login", {
+>>>>>>> origin/main
     method: "POST",
     body: JSON.stringify(payload),
   });
 
+<<<<<<< HEAD
+  const role: UserRole =
+    backend.role?.toLowerCase() === "doctor" ? "doctor" : "patient";
+
+  return {
+    token: backend.token,
+    user: {
+      id: backend.userId,
+      email: backend.email,
+      role,
+      name: backend.email?.split("@")[0] ?? "User",
+      // backend ti je dozvolio login => email je verifikovan / user enabled
+      emailVerified: true,
+    },
+  };
+=======
   const normalizedRole = response.role?.toLowerCase();
   const role =
     normalizedRole === "doctor"
@@ -127,6 +163,7 @@ export async function login(payload: LoginPayload): Promise<LoginResponse> {
   };
 
   return { token: response.token, user };
+>>>>>>> origin/main
 }
 
 export async function register(
@@ -151,6 +188,8 @@ export async function register(
     return { message: "Mock account created. Check your inbox to verify." };
   }
 
+<<<<<<< HEAD
+=======
   console.log('here');
 
   const backendRole =
@@ -178,6 +217,7 @@ export async function register(
 
   console.log('body');
 
+>>>>>>> origin/main
   return request<GenericResponse>("/api/auth/register", {
     method: "POST",
     body: JSON.stringify(body),
@@ -199,6 +239,12 @@ export async function requestPasswordReset(
     };
   }
 
+<<<<<<< HEAD
+  return request<GenericResponse>("/api/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+=======
   return request<GenericResponse>(
     `api/auth/forgot-password?email=${encodeURIComponent(payload.email)}`,
     {
@@ -207,6 +253,7 @@ export async function requestPasswordReset(
       body: undefined,
     },
   );
+>>>>>>> origin/main
 }
 
 export async function resetPassword(
@@ -221,6 +268,12 @@ export async function resetPassword(
     return { message: "Mock password reset complete." };
   }
 
+<<<<<<< HEAD
+  return request<GenericResponse>("/api/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+=======
   return request<GenericResponse>(
     `api/auth/reset-password?token=${encodeURIComponent(payload.token)}&newPassword=${encodeURIComponent(payload.password)}`,
     {
@@ -228,6 +281,7 @@ export async function resetPassword(
       body: undefined,
     },
   );
+>>>>>>> origin/main
 }
 
 export async function verifyEmail(token: string): Promise<GenericResponse> {
@@ -240,6 +294,12 @@ export async function verifyEmail(token: string): Promise<GenericResponse> {
     return { message: "Email verified." };
   }
 
+<<<<<<< HEAD
+  return request<GenericResponse>("/api/auth/verify-email", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+=======
   return request<GenericResponse>(
     `api/verify-email?token=${encodeURIComponent(token)}`,
     {
@@ -247,4 +307,6 @@ export async function verifyEmail(token: string): Promise<GenericResponse> {
       body: undefined,
     },
   );
+>>>>>>> origin/main
 }
+
