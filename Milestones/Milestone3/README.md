@@ -1,1 +1,1 @@
-# Short description of the milestone #
+# Milestone 3 – Appointments, Search, Reviews, and Admin
