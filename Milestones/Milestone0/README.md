@@ -5,7 +5,7 @@
 
 ---
 
-## What is done
+## Achievements
 
 - Defined project requirements
 - Designed web application sections
