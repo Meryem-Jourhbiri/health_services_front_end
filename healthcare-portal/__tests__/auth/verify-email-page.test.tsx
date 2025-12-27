@@ -1,7 +1,9 @@
 
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
+
+const verifyEmailMock = jest.fn();
 
 jest.mock("next/navigation", () => ({
   __esModule: true,
@@ -10,9 +12,10 @@ jest.mock("next/navigation", () => ({
   }),
   useSearchParams: () => ({
     get: (key: string) => {
-      if (key === "status") return "pending"; 
+      if (key === "status") return "pending";
       if (key === "email") return "patient@example.com";
-      return null; 
+      if (key === "token") return null;
+      return null;
     },
   }),
 }));
@@ -20,7 +23,7 @@ jest.mock("next/navigation", () => ({
 jest.mock("@/lib/auth/auth-context", () => ({
   __esModule: true,
   useAuth: () => ({
-    verifyEmail: jest.fn(),
+    verifyEmail: verifyEmailMock,
     isSubmitting: false,
   }),
   AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -29,17 +32,35 @@ jest.mock("@/lib/auth/auth-context", () => ({
 import VerifyEmailPage from "@/app/verify-email/page";
 
 describe("VerifyEmailPage", () => {
-  it("renders pending verification state with email and back-to-login button", () => {
+  beforeEach(() => {
+    verifyEmailMock.mockReset();
+  });
+
+  it("renders verification code input, email, and actions", () => {
     render(<VerifyEmailPage />);
 
-    expect(
-      screen.getByText(/verify your email to continue/i)
-    ).toBeInTheDocument();
-
+    expect(screen.getByText(/verify your email to continue/i)).toBeInTheDocument();
     expect(screen.getByText("patient@example.com")).toBeInTheDocument();
 
+    expect(screen.getByLabelText(/verification code/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /verify email/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /back to login/i })).toBeInTheDocument();
+  });
+
+  it("submits the pasted code for verification and shows success feedback", async () => {
+    verifyEmailMock.mockResolvedValueOnce({});
+    render(<VerifyEmailPage />);
+
+    fireEvent.change(screen.getByLabelText(/verification code/i), {
+      target: { value: "123456" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /verify email/i }));
+
+    await waitFor(() =>
+      expect(verifyEmailMock).toHaveBeenCalledWith("123456"),
+    );
     expect(
-      screen.getByRole("button", { name: /back to login/i })
+      screen.getByText(/email verified\. you may now log in\./i),
     ).toBeInTheDocument();
   });
 });

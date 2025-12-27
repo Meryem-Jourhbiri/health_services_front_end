@@ -2,8 +2,9 @@
 
 import { Button } from "@heroui/button";
 import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Input } from "@heroui/input";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
 
@@ -35,34 +36,40 @@ const STATUS_CONFIG: Record<
 };
 
 export default function VerifyEmailPage() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const status = (searchParams.get("status") as Status) ?? "pending";
-  const token = searchParams.get("token");
+  const initialStatus = (searchParams.get("status") as Status) ?? "pending";
+  const presetToken = searchParams.get("token") ?? "";
   const email = searchParams.get("email");
   const { verifyEmail, isSubmitting } = useAuth();
+  const [code, setCode] = useState(presetToken);
+  const [status, setStatus] = useState<Status>(initialStatus);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (status !== "success" || !token) {
+    setCode(presetToken);
+  }, [presetToken]);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setMessage(null);
+    setError(null);
+
+    const trimmedCode = code.trim();
+    if (!trimmedCode) {
+      setError("Enter the verification code from your email.");
       return;
     }
 
-    const verify = async () => {
-      try {
-        await verifyEmail(token);
-        setMessage("Email verified. Redirecting to login...");
-        setTimeout(() => router.replace("/login"), 1500);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Unable to verify email.",
-        );
-      }
-    };
-
-    verify();
-  }, [router, status, token, verifyEmail]);
+    try {
+      await verifyEmail(trimmedCode);
+      setStatus("success");
+      setMessage("Email verified. You may now log in.");
+    } catch (err) {
+      setStatus("pending");
+      setError(err instanceof Error ? err.message : "Unable to verify email.");
+    }
+  };
 
   const config = STATUS_CONFIG[status];
 
@@ -86,16 +93,37 @@ export default function VerifyEmailPage() {
               {email}
             </p>
           ) : null}
-          {status === "pending" ? (
-            <div className="text-sm text-default-500">
-              <p className="font-semibold text-default-600">Troubleshooting</p>
-              <ul className="mt-2 space-y-1 text-left">
-                <li>- Check your spam folder</li>
-                <li>- Confirm the email is typed correctly</li>
-                <li>- Request a fresh link from the login page</li>
-              </ul>
-            </div>
-          ) : null}
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <Input
+              label="Verification code"
+              placeholder="Paste the code from your email"
+              value={code}
+              onChange={(event) => setCode(event.target.value)}
+              variant="bordered"
+              autoComplete="one-time-code"
+            />
+            {status === "pending" ? (
+              <div className="text-sm text-default-500">
+                <p className="font-semibold text-default-600">
+                  How to verify
+                </p>
+                <ul className="mt-2 space-y-1 text-left">
+                  <li>- Copy the code in your verification email</li>
+                  <li>- Paste it above and submit</li>
+                  <li>- Request a fresh link from the login page if expired</li>
+                </ul>
+              </div>
+            ) : null}
+            <Button
+              type="submit"
+              color="primary"
+              radius="full"
+              className="w-full"
+              isLoading={isSubmitting}
+            >
+              Verify email
+            </Button>
+          </form>
           {message ? (
             <p className="rounded-medium bg-success-100/70 px-4 py-2 text-sm text-success-600">
               {message}

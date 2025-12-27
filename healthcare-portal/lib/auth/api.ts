@@ -230,11 +230,10 @@ export async function verifyEmail(token: string): Promise<GenericResponse> {
   }
 
   return request<GenericResponse>(
-    `api/verify-email?token=${encodeURIComponent(token)}`,
+    `/api/auth/verify-email?token=${encodeURIComponent(token)}`,
     {
       method: "POST",
       body: undefined,
     },
   );
 }
-
