@@ -18,6 +18,7 @@ export default function PatientProfilePage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const [serverProfile, setServerProfile] = useState<PatientProfile | null>(
     null,
@@ -118,6 +119,7 @@ export default function PatientProfilePage() {
     setMedicalHistoryText(
       JSON.stringify(serverProfile.medicalHistory ?? {}, null, 2),
     );
+    setIsEditing(false);
   }
 
   async function onSave() {
@@ -146,6 +148,7 @@ export default function PatientProfilePage() {
       setForm(saved);
       setMedicalHistoryText(JSON.stringify(saved.medicalHistory ?? {}, null, 2));
       setSuccess("Profile saved");
+      setIsEditing(false);
       setTimeout(() => setSuccess(null), 2000);
     } catch (e) {
       const message =
@@ -168,23 +171,35 @@ export default function PatientProfilePage() {
           </div>
 
           <div className="flex gap-2">
-            <Button
-              variant="flat"
-              onPress={onCancel}
-              isDisabled={!isDirty || saving || loading}
-            >
-              Cancel
-            </Button>
-            <Button
-              color="primary"
-              onPress={onSave}
-              isLoading={saving}
-              isDisabled={
-                loading || saving || !isDirty || Boolean(validationError)
-              }
-            >
-              Save
-            </Button>
+            {isEditing ? (
+              <>
+                <Button
+                  variant="flat"
+                  onPress={onCancel}
+                  isDisabled={saving || loading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  color="primary"
+                  onPress={onSave}
+                  isLoading={saving}
+                  isDisabled={
+                    loading || saving || !isDirty || Boolean(validationError)
+                  }
+                >
+                  Save
+                </Button>
+              </>
+            ) : (
+              <Button
+                color="primary"
+                onPress={() => setIsEditing(true)}
+                isDisabled={loading || !form}
+              >
+                Edit profile
+              </Button>
+            )}
           </div>
         </CardHeader>
 
@@ -210,7 +225,64 @@ export default function PatientProfilePage() {
             <div className="text-sm text-red-600">{validationError}</div>
           )}
 
-          {!loading && form && (
+          {!loading && !isEditing && form && (
+            <div className="space-y-4 text-sm">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-default-500">
+                    First name
+                  </p>
+                  <p className="font-medium">{form.firstName}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-default-500">
+                    Last name
+                  </p>
+                  <p className="font-medium">{form.lastName}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-default-500">
+                    Date of birth
+                  </p>
+                  <p className="font-medium">{form.dob}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-default-500">
+                    Phone
+                  </p>
+                  <p className="font-medium">{form.phone || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-default-500">
+                    Address
+                  </p>
+                  <p className="font-medium">{form.address || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-default-500">
+                    Gender
+                  </p>
+                  <p className="font-medium">{form.gender || "—"}</p>
+                </div>
+                <div className="md:col-span-2">
+                  <p className="text-xs uppercase tracking-wide text-default-500">
+                    Insurance info
+                  </p>
+                  <p className="font-medium">{form.insuranceInfo || "—"}</p>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-default-500">
+                  Medical history
+                </p>
+                <pre className="mt-2 whitespace-pre-wrap rounded-xl border border-default-100 bg-content1/70 p-3 text-xs">
+                  {medicalHistoryText || "{}"}
+                </pre>
+              </div>
+            </div>
+          )}
+
+          {!loading && isEditing && form && (
             <div className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <Input
@@ -280,6 +352,5 @@ export default function PatientProfilePage() {
     </div>
   );
 }
-
 
 
