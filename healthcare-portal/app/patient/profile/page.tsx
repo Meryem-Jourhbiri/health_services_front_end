@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 
@@ -158,132 +157,129 @@ export default function PatientProfilePage() {
   }
 
   return (
-    <ProtectedRoute allowRoles={["patient"]}>
-      <div className="p-6 max-w-3xl mx-auto">
-        <Card>
-          <CardHeader className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-semibold">Patient Profile</h1>
-              <p className="text-sm text-default-500">
-                Edit your details and save changes.
-              </p>
+    <div className="p-6 max-w-3xl mx-auto">
+      <Card>
+        <CardHeader className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold">Patient Profile</h1>
+            <p className="text-sm text-default-500">
+              Edit your details and save changes.
+            </p>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              variant="flat"
+              onPress={onCancel}
+              isDisabled={!isDirty || saving || loading}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="primary"
+              onPress={onSave}
+              isLoading={saving}
+              isDisabled={
+                loading || saving || !isDirty || Boolean(validationError)
+              }
+            >
+              Save
+            </Button>
+          </div>
+        </CardHeader>
+
+        <CardBody className="space-y-4">
+          {loading && (
+            <p className="text-sm text-default-500">Loading profile...</p>
+          )}
+
+          {!loading && error && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm">
+              {error}
             </div>
+          )}
 
-            <div className="flex gap-2">
-              <Button
-                variant="flat"
-                onPress={onCancel}
-                isDisabled={!isDirty || saving || loading}
-              >
-                Cancel
-              </Button>
-              <Button
-                color="primary"
-                onPress={onSave}
-                isLoading={saving}
-                isDisabled={
-                  loading || saving || !isDirty || Boolean(validationError)
-                }
-              >
-                Save
-              </Button>
+          {!loading && success && (
+            <div className="flex items-center gap-2 rounded-xl bg-success text-success-foreground px-4 py-3 text-sm shadow-lg">
+              <span className="text-lg">✅</span>
+              <span className="font-medium">{success}</span>
             </div>
-          </CardHeader>
+          )}
 
-          <CardBody className="space-y-4">
-            {loading && (
-              <p className="text-sm text-default-500">Loading profile...</p>
-            )}
+          {!loading && validationError && (
+            <div className="text-sm text-red-600">{validationError}</div>
+          )}
 
-            {!loading && error && (
-              <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm">
-                {error}
+          {!loading && form && (
+            <div className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <Input
+                  label="First name"
+                  value={form.firstName}
+                  onValueChange={(v) => setField("firstName", v)}
+                  isRequired
+                />
+                <Input
+                  label="Last name"
+                  value={form.lastName}
+                  onValueChange={(v) => setField("lastName", v)}
+                  isRequired
+                />
+                <Input
+                  label="Date of birth"
+                  type="date"
+                  value={form.dob}
+                  onValueChange={(v) => setField("dob", v)}
+                  isRequired
+                />
+                <Input
+                  label="Phone"
+                  value={form.phone}
+                  onValueChange={(v) => setField("phone", v)}
+                />
+                <Input
+                  label="Address"
+                  value={form.address}
+                  onValueChange={(v) => setField("address", v)}
+                />
+                <Input
+                  label="Gender"
+                  value={form.gender}
+                  onValueChange={(v) => setField("gender", v)}
+                />
+                <Input
+                  className="md:col-span-2"
+                  label="Insurance info"
+                  value={form.insuranceInfo}
+                  onValueChange={(v) => setField("insuranceInfo", v)}
+                />
               </div>
-            )}
 
-            {!loading && success && (
-              <div className="flex items-center gap-2 rounded-xl bg-success text-success-foreground px-4 py-3 text-sm shadow-lg">
-                <span className="text-lg">✅</span>
-                <span className="font-medium">{success}</span>
+              <div>
+                <label className="text-sm text-default-500">
+                  Medical history (JSON)
+                </label>
+                <textarea
+                  className="mt-2 w-full rounded-xl border border-default-100 bg-content1/70 p-3 text-sm font-mono"
+                  rows={7}
+                  value={medicalHistoryText}
+                  onChange={(e) => {
+                    setError(null);
+                    setSuccess(null);
+                    setMedicalHistoryText(e.target.value);
+                  }}
+                />
+                <p className="mt-1 text-xs text-default-500">
+                  Example: {"{ \"allergies\": [\"pollen\"], \"notes\": \"...\" }"}
+                </p>
               </div>
-            )}
-
-            {!loading && validationError && (
-              <div className="text-sm text-red-600">{validationError}</div>
-            )}
-
-            {!loading && form && (
-              <div className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Input
-                    label="First name"
-                    value={form.firstName}
-                    onValueChange={(v) => setField("firstName", v)}
-                    isRequired
-                  />
-                  <Input
-                    label="Last name"
-                    value={form.lastName}
-                    onValueChange={(v) => setField("lastName", v)}
-                    isRequired
-                  />
-                  <Input
-                    label="Date of birth"
-                    type="date"
-                    value={form.dob}
-                    onValueChange={(v) => setField("dob", v)}
-                    isRequired
-                  />
-                  <Input
-                    label="Phone"
-                    value={form.phone}
-                    onValueChange={(v) => setField("phone", v)}
-                  />
-                  <Input
-                    label="Address"
-                    value={form.address}
-                    onValueChange={(v) => setField("address", v)}
-                  />
-                  <Input
-                    label="Gender"
-                    value={form.gender}
-                    onValueChange={(v) => setField("gender", v)}
-                  />
-                  <Input
-                    className="md:col-span-2"
-                    label="Insurance info"
-                    value={form.insuranceInfo}
-                    onValueChange={(v) => setField("insuranceInfo", v)}
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm text-default-500">
-                    Medical history (JSON)
-                  </label>
-                  <textarea
-                    className="mt-2 w-full rounded-xl border border-default-100 bg-content1/70 p-3 text-sm font-mono"
-                    rows={7}
-                    value={medicalHistoryText}
-                    onChange={(e) => {
-                      setError(null);
-                      setSuccess(null);
-                      setMedicalHistoryText(e.target.value);
-                    }}
-                  />
-                  <p className="mt-1 text-xs text-default-500">
-                    Example: {"{ \"allergies\": [\"pollen\"], \"notes\": \"...\" }"}
-                  </p>
-                </div>
-              </div>
-            )}
-          </CardBody>
-        </Card>
-      </div>
-    </ProtectedRoute>
+            </div>
+          )}
+        </CardBody>
+      </Card>
+    </div>
   );
 }
-
 
 
 

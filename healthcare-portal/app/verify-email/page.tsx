@@ -137,7 +137,7 @@ export default function VerifyEmailPage() {
           <div className="space-y-3">
             <Button
               as={Link}
-              href="/login"
+              href={email ? `/login?email=${encodeURIComponent(email)}` : "/login"}
               color="primary"
               radius="full"
               className="w-full"
