@@ -1,6 +1,7 @@
 // app/doctor/page.tsx
 "use client";
 
+// app/doctor/page.tsx
 import { Avatar } from "@heroui/avatar";
 import { Button } from "@heroui/button";
 import { Card, CardBody, CardHeader } from "@heroui/card";
@@ -13,10 +14,6 @@ import {
   TableHeader,
   TableRow,
 } from "@heroui/table";
-import { useRouter } from "next/navigation";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { DashboardNavbar } from "@/components/navigation/DashboardNavbar";
-import { useAuth } from "@/lib/auth/auth-context";
 
 const appointments = [
   {
@@ -42,93 +39,85 @@ const appointments = [
   },
 ];
 
+const appointmentColumns = [
+  { key: "patient", label: "Patient" },
+  { key: "time", label: "Time" },
+  { key: "type", label: "Type" },
+  { key: "status", label: "Status" },
+  { key: "actions", label: "Actions", align: "end" },
+];
+
 export default function DoctorDashboardPage() {
-  const { user, logout } = useAuth();
-  const router = useRouter();
-
-  const handleLogout = () => {
-    logout();
-    router.replace("/");
-  };
-
   return (
-    <ProtectedRoute allowRoles={["doctor"]} unauthenticatedRedirect="/">
-      <div className="flex min-h-screen flex-col bg-background">
-      <DashboardNavbar
-        title="Doctor Portal"
-        onLogout={handleLogout}
-        avatarLabel={user?.name || "Doctor"}
-        userName={user?.name || "Doctor"}
-      />
+    <div className="px-6 py-6 md:px-10 md:py-8 space-y-6">
+      {/* Top stats */}
+      <section className="grid gap-4 md:grid-cols-3">
+        <StatCard label="Today&apos;s appointments" value="12" />
+        <StatCard label="New patients this week" value="5" />
+        <StatCard label="Average wait time" value="08 min" />
+      </section>
 
-        <main className="flex-1 px-6 py-6 md:px-10 md:py-8 space-y-6">
-          {/* Top stats */}
-          <section className="grid gap-4 md:grid-cols-3">
-            <StatCard label="Today&apos;s appointments" value="12" />
-            <StatCard label="New patients this week" value="5" />
-            <StatCard label="Average wait time" value="08 min" />
-          </section>
+      {/* Appointments table */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <h2 className="text-xl font-semibold">Upcoming appointments</h2>
+            <p className="text-sm text-default-500">
+              Quickly see who you&apos;re meeting today.
+            </p>
+          </div>
+          <Button color="primary" radius="full">
+            New appointment
+          </Button>
+        </div>
 
-          {/* Appointments table */}
-          <section className="space-y-4">
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <div>
-                <h2 className="text-xl font-semibold">Upcoming appointments</h2>
-                <p className="text-sm text-default-500">
-                  Quickly see who you&apos;re meeting today.
-                </p>
-              </div>
-              <Button color="primary" radius="full">
-                New appointment
-              </Button>
-            </div>
-
-            <Card>
-              <CardBody>
-                <Table aria-label="Upcoming appointments table">
-                  <TableHeader>
-                    <TableColumn>Patient</TableColumn>
-                    <TableColumn>Time</TableColumn>
-                    <TableColumn>Type</TableColumn>
-                    <TableColumn>Status</TableColumn>
-                    <TableColumn className="text-right">Actions</TableColumn>
-                  </TableHeader>
-                  <TableBody>
-                    {appointments.map((apt) => (
-                      <TableRow key={apt.id}>
-                        <TableCell className="flex items-center gap-2">
-                          <Avatar
-                            name={apt.patient}
-                            className="bg-primary/10 text-primary"
-                            size="sm"
-                          />
-                          <div className="flex flex-col">
-                            <span>{apt.patient}</span>
-                            <span className="text-xs text-default-500">
-                              {apt.id}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{apt.time}</TableCell>
-                        <TableCell>{apt.type}</TableCell>
-                        <TableCell>
-                          <StatusChip status={apt.status} />
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button size="sm" variant="light">
-                            View
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardBody>
-            </Card>
-          </section>
-        </main>
-      </div>
-    </ProtectedRoute>
+        <Card>
+          <CardBody>
+            <Table aria-label="Upcoming appointments table">
+              <TableHeader columns={appointmentColumns}>
+                {(column) => (
+                  <TableColumn
+                    key={column.key}
+                    align={column.align as "start" | "center" | "end"}
+                  >
+                    {column.label}
+                  </TableColumn>
+                )}
+              </TableHeader>
+              <TableBody items={appointments}>
+                {(apt) => (
+                  <TableRow key={apt.id}>
+                    <TableCell className="flex items-center gap-2">
+                      <Avatar
+                        name={apt.patient}
+                        className="bg-primary/10 text-primary"
+                        size="sm"
+                      />
+                      <div className="flex flex-col">
+                        <span>{apt.patient}</span>
+                        <span className="text-xs text-default-500">
+                          {apt.id}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{apt.time}</TableCell>
+                    <TableCell>{apt.type}</TableCell>
+                    <TableCell>
+                      <StatusChip status={apt.status} />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button size="sm" variant="light">
+                        View
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardBody>
+        </Card>
+      </section>
+    </div>
   );
 }
 
