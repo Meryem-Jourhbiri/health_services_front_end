@@ -25,7 +25,7 @@ export default function HomePage() {
         <div className="flex flex-wrap items-center justify-center gap-4">
           <Button
             as={Link}
-            href="/login?next=/doctor&email=doctor@hospital.com&password=!Doctor123"
+            href="/login?next=/doctor"
             color="primary"
             size="lg"
             radius="full"
@@ -35,7 +35,7 @@ export default function HomePage() {
 
           <Button
             as={Link}
-            href="/login?next=/patient&email=patient@patient.com&password=!Patient123"
+            href="/login?next=/patient"
             variant="bordered"
             size="lg"
             radius="full"
