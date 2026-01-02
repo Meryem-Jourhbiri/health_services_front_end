@@ -60,8 +60,10 @@ export default function DoctorAvailabilityPage() {
   >([]);
 
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [showScheduleForm, setShowScheduleForm] = useState(false);
   const [scheduleForm, setScheduleForm] =
     useState<AvailabilityPayload>(defaultSchedule);
+  const [showUnavailabilityForm, setShowUnavailabilityForm] = useState(false);
   const [unavailabilityForm, setUnavailabilityForm] =
     useState<UnavailabilityPayload>(defaultUnavailability);
 
@@ -163,6 +165,7 @@ export default function DoctorAvailabilityPage() {
       }
       setEditingId(null);
       setScheduleForm(defaultSchedule);
+      setShowScheduleForm(false);
     } catch (e) {
       const message =
         e instanceof ApiError ? e.message : "Failed to save availability.";
@@ -182,11 +185,13 @@ export default function DoctorAvailabilityPage() {
       breakEndTime: schedule.breakEndTime ?? "",
       slotDurationMinutes: schedule.slotDurationMinutes,
     });
+    setShowScheduleForm(true);
   }
 
   function resetScheduleForm() {
     setEditingId(null);
     setScheduleForm(defaultSchedule);
+    setShowScheduleForm(false);
     setError(null);
     setSuccess(null);
   }
@@ -226,6 +231,7 @@ export default function DoctorAvailabilityPage() {
       const created = await createUnavailability(token, unavailabilityForm);
       setUnavailabilities((prev) => [...prev, created]);
       setUnavailabilityForm(defaultUnavailability);
+      setShowUnavailabilityForm(false);
       setSuccess("Unavailability saved.");
     } catch (e) {
       const message =
@@ -288,99 +294,8 @@ export default function DoctorAvailabilityPage() {
                 Add the days and hours you are available for appointments.
               </p>
             </div>
-            {isEditing ? (
-              <Button variant="flat" onPress={resetScheduleForm}>
-                Cancel edit
-              </Button>
-            ) : null}
           </CardHeader>
           <CardBody className="space-y-4">
-            <form className="grid gap-4 md:grid-cols-2" onSubmit={handleScheduleSubmit}>
-              <div className="space-y-2">
-                <label className="text-sm text-default-500">Day of week</label>
-                <select
-                  className="w-full rounded-xl border border-default-100 bg-content1/70 px-3 py-2 text-sm"
-                  value={scheduleForm.dayOfWeek}
-                  onChange={(event) =>
-                    setScheduleForm((prev) => ({
-                      ...prev,
-                      dayOfWeek: event.target.value as DayOfWeek,
-                    }))
-                  }
-                >
-                  {DAYS.map((day) => (
-                    <option key={day} value={day}>
-                      {day}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <Input
-                label="Slot duration (minutes)"
-                type="number"
-                min={5}
-                value={String(scheduleForm.slotDurationMinutes)}
-                onValueChange={(value) =>
-                  setScheduleForm((prev) => ({
-                    ...prev,
-                    slotDurationMinutes: Number(value) || 0,
-                  }))
-                }
-                isRequired
-              />
-              <Input
-                label="Start time"
-                type="time"
-                value={scheduleForm.startTime}
-                onValueChange={(value) =>
-                  setScheduleForm((prev) => ({ ...prev, startTime: value }))
-                }
-                isRequired
-              />
-              <Input
-                label="End time"
-                type="time"
-                value={scheduleForm.endTime}
-                onValueChange={(value) =>
-                  setScheduleForm((prev) => ({ ...prev, endTime: value }))
-                }
-                isRequired
-              />
-              <Input
-                label="Break start time"
-                type="time"
-                value={scheduleForm.breakStartTime || ""}
-                onValueChange={(value) =>
-                  setScheduleForm((prev) => ({
-                    ...prev,
-                    breakStartTime: value || null,
-                  }))
-                }
-              />
-              <Input
-                label="Break end time"
-                type="time"
-                value={scheduleForm.breakEndTime || ""}
-                onValueChange={(value) =>
-                  setScheduleForm((prev) => ({
-                    ...prev,
-                    breakEndTime: value || null,
-                  }))
-                }
-              />
-              <div className="md:col-span-2">
-                <Button
-                  type="submit"
-                  color="primary"
-                  radius="full"
-                  isLoading={saving}
-                  isDisabled={loading}
-                >
-                  {isEditing ? "Update schedule" : "Add schedule"}
-                </Button>
-              </div>
-            </form>
-
             <div className="space-y-3">
               {schedules.length === 0 ? (
                 <p className="text-sm text-default-500">
@@ -425,6 +340,119 @@ export default function DoctorAvailabilityPage() {
                 ))
               )}
             </div>
+
+            <Button
+              radius="full"
+              color="primary"
+              variant="bordered"
+              isDisabled={loading || saving}
+              onPress={() => {
+                setEditingId(null);
+                setScheduleForm(defaultSchedule);
+                setShowScheduleForm(true);
+              }}
+            >
+              Add new schedule
+            </Button>
+
+            {showScheduleForm ? (
+              <form
+                className="grid gap-4 md:grid-cols-2"
+                onSubmit={handleScheduleSubmit}
+              >
+                <div className="space-y-2">
+                  <label className="text-sm text-default-500">Day of week</label>
+                  <select
+                    className="w-full rounded-xl border border-default-100 bg-content1/70 px-3 py-2 text-sm"
+                    value={scheduleForm.dayOfWeek}
+                    onChange={(event) =>
+                      setScheduleForm((prev) => ({
+                        ...prev,
+                        dayOfWeek: event.target.value as DayOfWeek,
+                      }))
+                    }
+                  >
+                    {DAYS.map((day) => (
+                      <option key={day} value={day}>
+                        {day}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <Input
+                  label="Slot duration (minutes)"
+                  type="number"
+                  min={5}
+                  value={String(scheduleForm.slotDurationMinutes)}
+                  onValueChange={(value) =>
+                    setScheduleForm((prev) => ({
+                      ...prev,
+                      slotDurationMinutes: Number(value) || 0,
+                    }))
+                  }
+                  isRequired
+                />
+                <Input
+                  label="Start time"
+                  type="time"
+                  value={scheduleForm.startTime}
+                  onValueChange={(value) =>
+                    setScheduleForm((prev) => ({ ...prev, startTime: value }))
+                  }
+                  isRequired
+                />
+                <Input
+                  label="End time"
+                  type="time"
+                  value={scheduleForm.endTime}
+                  onValueChange={(value) =>
+                    setScheduleForm((prev) => ({ ...prev, endTime: value }))
+                  }
+                  isRequired
+                />
+                <Input
+                  label="Break start time"
+                  type="time"
+                  value={scheduleForm.breakStartTime || ""}
+                  onValueChange={(value) =>
+                    setScheduleForm((prev) => ({
+                      ...prev,
+                      breakStartTime: value || null,
+                    }))
+                  }
+                />
+                <Input
+                  label="Break end time"
+                  type="time"
+                  value={scheduleForm.breakEndTime || ""}
+                  onValueChange={(value) =>
+                    setScheduleForm((prev) => ({
+                      ...prev,
+                      breakEndTime: value || null,
+                    }))
+                  }
+                />
+                <div className="md:col-span-2 flex flex-wrap gap-2">
+                  <Button
+                    type="submit"
+                    color="primary"
+                    radius="full"
+                    isLoading={saving}
+                    isDisabled={loading}
+                  >
+                    {isEditing ? "Update schedule" : "Add schedule"}
+                  </Button>
+                  <Button
+                    variant="flat"
+                    radius="full"
+                    onPress={resetScheduleForm}
+                    isDisabled={saving}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            ) : null}
           </CardBody>
         </Card>
 
@@ -438,52 +466,6 @@ export default function DoctorAvailabilityPage() {
             </div>
           </CardHeader>
           <CardBody className="space-y-4">
-            <form className="space-y-4" onSubmit={handleUnavailabilitySubmit}>
-              <Input
-                label="Start date"
-                type="date"
-                value={unavailabilityForm.startDate}
-                onValueChange={(value) =>
-                  setUnavailabilityForm((prev) => ({
-                    ...prev,
-                    startDate: value,
-                  }))
-                }
-                isRequired
-              />
-              <Input
-                label="End date"
-                type="date"
-                value={unavailabilityForm.endDate}
-                onValueChange={(value) =>
-                  setUnavailabilityForm((prev) => ({
-                    ...prev,
-                    endDate: value,
-                  }))
-                }
-                isRequired
-              />
-              <Input
-                label="Reason"
-                value={unavailabilityForm.reason}
-                onValueChange={(value) =>
-                  setUnavailabilityForm((prev) => ({
-                    ...prev,
-                    reason: value,
-                  }))
-                }
-              />
-              <Button
-                type="submit"
-                color="primary"
-                radius="full"
-                isLoading={saving}
-                isDisabled={loading}
-              >
-                Add unavailable period
-              </Button>
-            </form>
-
             <div className="space-y-3">
               {unavailabilities.length === 0 ? (
                 <p className="text-sm text-default-500">
@@ -515,6 +497,77 @@ export default function DoctorAvailabilityPage() {
                 ))
               )}
             </div>
+
+            <Button
+              radius="full"
+              color="primary"
+              variant="bordered"
+              isDisabled={loading || saving}
+              onPress={() => setShowUnavailabilityForm(true)}
+            >
+              Add unavailable period
+            </Button>
+
+            {showUnavailabilityForm ? (
+              <form className="space-y-4" onSubmit={handleUnavailabilitySubmit}>
+                <Input
+                  label="Start date"
+                  type="date"
+                  value={unavailabilityForm.startDate}
+                  onValueChange={(value) =>
+                    setUnavailabilityForm((prev) => ({
+                      ...prev,
+                      startDate: value,
+                    }))
+                  }
+                  isRequired
+                />
+                <Input
+                  label="End date"
+                  type="date"
+                  value={unavailabilityForm.endDate}
+                  onValueChange={(value) =>
+                    setUnavailabilityForm((prev) => ({
+                      ...prev,
+                      endDate: value,
+                    }))
+                  }
+                  isRequired
+                />
+                <Input
+                  label="Reason"
+                  value={unavailabilityForm.reason}
+                  onValueChange={(value) =>
+                    setUnavailabilityForm((prev) => ({
+                      ...prev,
+                      reason: value,
+                    }))
+                  }
+                />
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="submit"
+                    color="primary"
+                    radius="full"
+                    isLoading={saving}
+                    isDisabled={loading}
+                  >
+                    Save unavailable period
+                  </Button>
+                  <Button
+                    variant="flat"
+                    radius="full"
+                    onPress={() => {
+                      setUnavailabilityForm(defaultUnavailability);
+                      setShowUnavailabilityForm(false);
+                    }}
+                    isDisabled={saving}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            ) : null}
           </CardBody>
         </Card>
       </div>
