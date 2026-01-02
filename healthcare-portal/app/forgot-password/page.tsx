@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 export default function ForgotPasswordPage() {
   const { requestPasswordReset, isSubmitting } = useAuth();
   const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,10 +20,8 @@ export default function ForgotPasswordPage() {
     setStatus(null);
 
     try {
-      await requestPasswordReset({ email });
-      setStatus(
-        "If an account exists for that email, reset instructions were just sent.",
-      );
+      const response = await requestPasswordReset({ email: email.trim() });
+      setStatus(response.message);
     } catch (err) {
       setError(
         err instanceof Error
@@ -57,6 +56,16 @@ export default function ForgotPasswordPage() {
               variant="bordered"
               required
             />
+            {status ? (
+              <Input
+                label="Verification code"
+                placeholder="Paste the code from your email"
+                value={code}
+                onChange={(event) => setCode(event.target.value)}
+                variant="bordered"
+                autoComplete="one-time-code"
+              />
+            ) : null}
             {error ? (
               <p className="rounded-medium bg-danger-100/60 px-3 py-2 text-sm text-danger">
                 {error}
@@ -73,10 +82,26 @@ export default function ForgotPasswordPage() {
               radius="full"
               color="primary"
               isLoading={isSubmitting}
+              isDisabled={Boolean(status)}
             >
               Send reset link
             </Button>
           </form>
+          {status ? (
+            <Button
+              as={Link}
+              href={`/reset-password${
+                code.trim()
+                  ? `?token=${encodeURIComponent(code.trim())}`
+                  : ""
+              }`}
+              className="mt-4 w-full"
+              radius="full"
+              color="primary"
+            >
+              Continue to reset password
+            </Button>
+          ) : null}
           <p className="mt-6 text-center text-sm text-default-500">
             Remembered it?{" "}
             <Link href="/login" className="font-semibold text-primary">

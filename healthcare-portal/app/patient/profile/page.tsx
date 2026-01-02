@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 
@@ -19,6 +18,7 @@ export default function PatientProfilePage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const [serverProfile, setServerProfile] = useState<PatientProfile | null>(
     null,
@@ -119,6 +119,7 @@ export default function PatientProfilePage() {
     setMedicalHistoryText(
       JSON.stringify(serverProfile.medicalHistory ?? {}, null, 2),
     );
+    setIsEditing(false);
   }
 
   async function onSave() {
@@ -147,6 +148,7 @@ export default function PatientProfilePage() {
       setForm(saved);
       setMedicalHistoryText(JSON.stringify(saved.medicalHistory ?? {}, null, 2));
       setSuccess("Profile saved");
+      setIsEditing(false);
       setTimeout(() => setSuccess(null), 2000);
     } catch (e) {
       const message =
@@ -158,132 +160,197 @@ export default function PatientProfilePage() {
   }
 
   return (
-    <ProtectedRoute allowRoles={["patient"]}>
-      <div className="p-6 max-w-3xl mx-auto">
-        <Card>
-          <CardHeader className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-semibold">Patient Profile</h1>
-              <p className="text-sm text-default-500">
-                Edit your details and save changes.
-              </p>
-            </div>
+    <div className="p-6 max-w-3xl mx-auto">
+      <Card>
+        <CardHeader className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold">Patient Profile</h1>
+            <p className="text-sm text-default-500">
+              Edit your details and save changes.
+            </p>
+          </div>
 
-            <div className="flex gap-2">
-              <Button
-                variant="flat"
-                onPress={onCancel}
-                isDisabled={!isDirty || saving || loading}
-              >
-                Cancel
-              </Button>
+          <div className="flex gap-2">
+            {isEditing ? (
+              <>
+                <Button
+                  variant="flat"
+                  onPress={onCancel}
+                  isDisabled={saving || loading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  color="primary"
+                  onPress={onSave}
+                  isLoading={saving}
+                  isDisabled={
+                    loading || saving || !isDirty || Boolean(validationError)
+                  }
+                >
+                  Save
+                </Button>
+              </>
+            ) : (
               <Button
                 color="primary"
-                onPress={onSave}
-                isLoading={saving}
-                isDisabled={
-                  loading || saving || !isDirty || Boolean(validationError)
-                }
+                onPress={() => setIsEditing(true)}
+                isDisabled={loading || !form}
               >
-                Save
+                Edit profile
               </Button>
+            )}
+          </div>
+        </CardHeader>
+
+        <CardBody className="space-y-4">
+          {loading && (
+            <p className="text-sm text-default-500">Loading profile...</p>
+          )}
+
+          {!loading && error && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm">
+              {error}
             </div>
-          </CardHeader>
+          )}
 
-          <CardBody className="space-y-4">
-            {loading && (
-              <p className="text-sm text-default-500">Loading profile...</p>
-            )}
+          {!loading && success && (
+            <div className="flex items-center gap-2 rounded-xl bg-success text-success-foreground px-4 py-3 text-sm shadow-lg">
+              <span className="text-lg">✅</span>
+              <span className="font-medium">{success}</span>
+            </div>
+          )}
 
-            {!loading && error && (
-              <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm">
-                {error}
-              </div>
-            )}
+          {!loading && validationError && (
+            <div className="text-sm text-red-600">{validationError}</div>
+          )}
 
-            {!loading && success && (
-              <div className="flex items-center gap-2 rounded-xl bg-success text-success-foreground px-4 py-3 text-sm shadow-lg">
-                <span className="text-lg">✅</span>
-                <span className="font-medium">{success}</span>
-              </div>
-            )}
-
-            {!loading && validationError && (
-              <div className="text-sm text-red-600">{validationError}</div>
-            )}
-
-            {!loading && form && (
-              <div className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Input
-                    label="First name"
-                    value={form.firstName}
-                    onValueChange={(v) => setField("firstName", v)}
-                    isRequired
-                  />
-                  <Input
-                    label="Last name"
-                    value={form.lastName}
-                    onValueChange={(v) => setField("lastName", v)}
-                    isRequired
-                  />
-                  <Input
-                    label="Date of birth"
-                    type="date"
-                    value={form.dob}
-                    onValueChange={(v) => setField("dob", v)}
-                    isRequired
-                  />
-                  <Input
-                    label="Phone"
-                    value={form.phone}
-                    onValueChange={(v) => setField("phone", v)}
-                  />
-                  <Input
-                    label="Address"
-                    value={form.address}
-                    onValueChange={(v) => setField("address", v)}
-                  />
-                  <Input
-                    label="Gender"
-                    value={form.gender}
-                    onValueChange={(v) => setField("gender", v)}
-                  />
-                  <Input
-                    className="md:col-span-2"
-                    label="Insurance info"
-                    value={form.insuranceInfo}
-                    onValueChange={(v) => setField("insuranceInfo", v)}
-                  />
-                </div>
-
+          {!loading && !isEditing && form && (
+            <div className="space-y-4 text-sm">
+              <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="text-sm text-default-500">
-                    Medical history (JSON)
-                  </label>
-                  <textarea
-                    className="mt-2 w-full rounded-xl border border-default-100 bg-content1/70 p-3 text-sm font-mono"
-                    rows={7}
-                    value={medicalHistoryText}
-                    onChange={(e) => {
-                      setError(null);
-                      setSuccess(null);
-                      setMedicalHistoryText(e.target.value);
-                    }}
-                  />
-                  <p className="mt-1 text-xs text-default-500">
-                    Example: {"{ \"allergies\": [\"pollen\"], \"notes\": \"...\" }"}
+                  <p className="text-xs uppercase tracking-wide text-default-500">
+                    First name
                   </p>
+                  <p className="font-medium">{form.firstName}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-default-500">
+                    Last name
+                  </p>
+                  <p className="font-medium">{form.lastName}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-default-500">
+                    Date of birth
+                  </p>
+                  <p className="font-medium">{form.dob}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-default-500">
+                    Phone
+                  </p>
+                  <p className="font-medium">{form.phone || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-default-500">
+                    Address
+                  </p>
+                  <p className="font-medium">{form.address || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-default-500">
+                    Gender
+                  </p>
+                  <p className="font-medium">{form.gender || "—"}</p>
+                </div>
+                <div className="md:col-span-2">
+                  <p className="text-xs uppercase tracking-wide text-default-500">
+                    Insurance info
+                  </p>
+                  <p className="font-medium">{form.insuranceInfo || "—"}</p>
                 </div>
               </div>
-            )}
-          </CardBody>
-        </Card>
-      </div>
-    </ProtectedRoute>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-default-500">
+                  Medical history
+                </p>
+                <pre className="mt-2 whitespace-pre-wrap rounded-xl border border-default-100 bg-content1/70 p-3 text-xs">
+                  {medicalHistoryText || "{}"}
+                </pre>
+              </div>
+            </div>
+          )}
+
+          {!loading && isEditing && form && (
+            <div className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <Input
+                  label="First name"
+                  value={form.firstName}
+                  onValueChange={(v) => setField("firstName", v)}
+                  isRequired
+                />
+                <Input
+                  label="Last name"
+                  value={form.lastName}
+                  onValueChange={(v) => setField("lastName", v)}
+                  isRequired
+                />
+                <Input
+                  label="Date of birth"
+                  type="date"
+                  value={form.dob}
+                  onValueChange={(v) => setField("dob", v)}
+                  isRequired
+                />
+                <Input
+                  label="Phone"
+                  value={form.phone}
+                  onValueChange={(v) => setField("phone", v)}
+                />
+                <Input
+                  label="Address"
+                  value={form.address}
+                  onValueChange={(v) => setField("address", v)}
+                />
+                <Input
+                  label="Gender"
+                  value={form.gender}
+                  onValueChange={(v) => setField("gender", v)}
+                />
+                <Input
+                  className="md:col-span-2"
+                  label="Insurance info"
+                  value={form.insuranceInfo}
+                  onValueChange={(v) => setField("insuranceInfo", v)}
+                />
+              </div>
+
+              <div>
+                <label className="text-sm text-default-500">
+                  Medical history (JSON)
+                </label>
+                <textarea
+                  className="mt-2 w-full rounded-xl border border-default-100 bg-content1/70 p-3 text-sm font-mono"
+                  rows={7}
+                  value={medicalHistoryText}
+                  onChange={(e) => {
+                    setError(null);
+                    setSuccess(null);
+                    setMedicalHistoryText(e.target.value);
+                  }}
+                />
+                <p className="mt-1 text-xs text-default-500">
+                  Example: {"{ \"allergies\": [\"pollen\"], \"notes\": \"...\" }"}
+                </p>
+              </div>
+            </div>
+          )}
+        </CardBody>
+      </Card>
+    </div>
   );
 }
-
-
 
 

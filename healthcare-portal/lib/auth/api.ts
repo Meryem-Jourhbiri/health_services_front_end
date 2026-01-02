@@ -183,21 +183,21 @@ export async function register(
 export async function requestPasswordReset(
   payload: ForgotPasswordPayload,
 ): Promise<GenericResponse> {
+  if (!payload.email) {
+    throw new ApiError("Email is required.");
+  }
+
   if (!BASE_URL) {
     await wait();
-    if (!payload.email) {
-      throw new ApiError("Email is required.");
-    }
-
     return {
       message:
         "If the email exists we just sent password reset instructions to it.",
     };
   }
 
-  return request<GenericResponse>("/api/auth/forgot-password", {
+  const query = new URLSearchParams({ email: payload.email }).toString();
+  return request<GenericResponse>(`/api/auth/forgot-password?${query}`, {
     method: "POST",
-    body: JSON.stringify(payload),
   });
 }
 
@@ -213,9 +213,12 @@ export async function resetPassword(
     return { message: "Mock password reset complete." };
   }
 
-  return request<GenericResponse>("/api/auth/reset-password", {
+  const query = new URLSearchParams({
+    token: payload.token,
+    newPassword: payload.password,
+  }).toString();
+  return request<GenericResponse>(`/api/auth/reset-password?${query}`, {
     method: "POST",
-    body: JSON.stringify(payload),
   });
 }
 
@@ -230,11 +233,10 @@ export async function verifyEmail(token: string): Promise<GenericResponse> {
   }
 
   return request<GenericResponse>(
-    `api/verify-email?token=${encodeURIComponent(token)}`,
+    `/api/auth/verify-email?token=${encodeURIComponent(token)}`,
     {
       method: "POST",
       body: undefined,
     },
   );
 }
-

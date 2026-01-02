@@ -22,6 +22,7 @@ import {
 import type {
   AuthUser,
   ForgotPasswordPayload,
+  GenericResponse,
   LoginPayload,
   RegisterPayload,
   ResetPasswordPayload,
@@ -44,8 +45,10 @@ type AuthContextValue = {
   login: (payload: LoginPayload) => Promise<AuthUser>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => void;
-  requestPasswordReset: (payload: ForgotPasswordPayload) => Promise<void>;
-  resetPassword: (payload: ResetPasswordPayload) => Promise<void>;
+  requestPasswordReset: (
+    payload: ForgotPasswordPayload,
+  ) => Promise<GenericResponse>;
+  resetPassword: (payload: ResetPasswordPayload) => Promise<GenericResponse>;
   verifyEmail: (token: string) => Promise<void>;
   setVerificationEmail: (email: string | null) => void;
 };
@@ -140,7 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (payload: ForgotPasswordPayload) => {
       setIsSubmitting(true);
       try {
-        await requestPasswordResetRequest(payload);
+        return await requestPasswordResetRequest(payload);
       } catch (error) {
         const message =
           error instanceof ApiError
@@ -157,7 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const resetPassword = useCallback(async (payload: ResetPasswordPayload) => {
     setIsSubmitting(true);
     try {
-      await resetPasswordRequest(payload);
+      return await resetPasswordRequest(payload);
     } catch (error) {
       const message =
         error instanceof ApiError

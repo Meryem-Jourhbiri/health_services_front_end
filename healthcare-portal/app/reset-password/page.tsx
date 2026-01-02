@@ -5,27 +5,33 @@ import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Input } from "@heroui/input";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get("token") ?? "";
+  const presetToken = searchParams.get("token") ?? "";
   const { resetPassword, isSubmitting } = useAuth();
 
+  const [code, setCode] = useState(presetToken);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setCode(presetToken);
+  }, [presetToken]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setStatus(null);
     setError(null);
 
-    if (!token) {
-      setError("Reset token is missing. Use the link from your email.");
+    const trimmedCode = code.trim();
+    if (!trimmedCode) {
+      setError("Enter the verification code from your email.");
       return;
     }
 
@@ -40,8 +46,8 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      await resetPassword({ token, password });
-      setStatus("Password updated. Redirecting to login...");
+      const response = await resetPassword({ token: trimmedCode, password });
+      setStatus(response.message);
       setTimeout(() => router.replace("/login"), 1500);
     } catch (err) {
       setError(
@@ -66,6 +72,15 @@ export default function ResetPasswordPage() {
         </CardHeader>
         <CardBody>
           <form className="space-y-5" onSubmit={handleSubmit}>
+            <Input
+              label="Verification code"
+              placeholder="Paste the code from your email"
+              value={code}
+              onChange={(event) => setCode(event.target.value)}
+              variant="bordered"
+              autoComplete="one-time-code"
+              required
+            />
             <Input
               label="New password"
               type="password"

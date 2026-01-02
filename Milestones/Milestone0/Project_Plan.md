@@ -180,7 +180,7 @@ This milestone focuses on enabling users to **view and edit their profiles**, up
 
 ---
 
-## Milestone 3 – Appointments, Search, Reviews, and Admin
+## Milestone 3 – Appointments, Doctor Search, and Review Management
 
 Finalize functionality and UX for demo readiness.
 
