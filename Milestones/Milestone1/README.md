@@ -1,6 +1,6 @@
 # Milestone 1 – Authentication and Frontend Foundations
 
-## Achievements
+## Completed
 
 ### Foundation
 
