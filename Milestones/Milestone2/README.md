@@ -1,6 +1,8 @@
 # Milestone 2 – Profiles and Availability Integration
 
-## Achievements
+This milestone delivers profile management for patients and doctors along with the first pass at doctor availability scheduling. The focus is on connecting profile and availability UI to backend endpoints, building reusable dashboard navigation, and ensuring authenticated flows are consistent with the backend contract.
+
+## Completed
 
 - Created reusable navbar for doctor and patient dashboards.
 - Added tests to include navbar routing.

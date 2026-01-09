@@ -1,1 +1,1 @@
-# Milestone 4 – Deployment, Testing
+# Milestone 4 – Admin Panel and Deployment
