@@ -59,7 +59,7 @@ export default function DoctorLayout({ children }: DoctorLayoutProps) {
           links={[
             { href: "/", label: "Home" },
             { href: "/doctor", label: "Dashboard" },
-            // { href: "/doctor/appointments", label: "Appointments" },
+            { href: "/doctor/appointments", label: "Appointments" },
             { href: "/doctor/availability", label: "Availability" },
             { href: "/doctor/profile", label: "Profile" },
           ]}
