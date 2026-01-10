@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Avatar } from "@heroui/avatar";
 import { Button } from "@heroui/button";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Input } from "@heroui/input";
@@ -81,7 +82,8 @@ export default function DoctorProfilePage() {
       serverProfile.education !== form.education ||
       serverProfile.bio !== form.bio ||
       serverProfile.clinicAddress !== form.clinicAddress ||
-      serverLanguages !== languagesText
+      serverLanguages !== languagesText ||
+      serverProfile.profilePhotoBase64 !== form.profilePhotoBase64
     );
   }, [serverProfile, form, languagesText]);
 
@@ -101,6 +103,28 @@ export default function DoctorProfilePage() {
     setError(null);
     setSuccess(null);
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
+  }
+
+  function onPhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const MAX_MB = 2;
+    if (file.size > MAX_MB * 1024 * 1024) {
+      setError(`Image is too large. Max ${MAX_MB}MB.`);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setError(null);
+      setSuccess(null);
+      setForm((prev) =>
+        prev ? { ...prev, profilePhotoBase64: base64 } : prev,
+      );
+    };
+    reader.readAsDataURL(file);
   }
 
   function onCancel() {
@@ -213,6 +237,28 @@ export default function DoctorProfilePage() {
 
           {!loading && !isEditing && form && (
             <div className="space-y-4 text-sm">
+              <div className="flex items-center gap-4">
+                {form.profilePhotoBase64 ? (
+                  <Avatar
+                    src={form.profilePhotoBase64}
+                    name={`${form.firstName} ${form.lastName}`}
+                    className="h-20 w-20"
+                    isBordered
+                  />
+                ) : (
+                  <div className="h-20 w-20 rounded-full border flex items-center justify-center text-xs text-default-500">
+                    No photo
+                  </div>
+                )}
+                <div className="text-sm">
+                  <p className="font-medium">
+                    Dr. {form.firstName} {form.lastName}
+                  </p>
+                  <p className="text-default-500">
+                    {form.specialization || "—"}
+                  </p>
+                </div>
+              </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <p className="text-xs uppercase tracking-wide text-default-500">
@@ -288,6 +334,30 @@ export default function DoctorProfilePage() {
 
           {!loading && isEditing && form && (
             <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                {form.profilePhotoBase64 ? (
+                  <Avatar
+                    src={form.profilePhotoBase64}
+                    name={`${form.firstName} ${form.lastName}`}
+                    className="h-20 w-20"
+                    isBordered
+                  />
+                ) : (
+                  <div className="h-20 w-20 rounded-full border flex items-center justify-center text-xs text-default-500">
+                    No photo
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Input
+                    type="file"
+                    label="Profile photo"
+                    accept="image/*"
+                    onChange={onPhotoChange}
+                  />
+                  <p className="text-xs text-default-500">JPG/PNG, max 2MB</p>
+                </div>
+              </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <Input
                   label="First name"
