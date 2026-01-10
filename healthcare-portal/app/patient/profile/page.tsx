@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
@@ -33,38 +33,37 @@ export default function PatientProfilePage() {
   useEffect(() => {
     let alive = true;
 
-  async function load() {
-  
-  if (isHydrating) return;
+    async function load() {
+      if (isHydrating) return;
 
-  
-  if (!token) {
-    setLoading(false);
-    setError("Not authenticated. Please log in again.");
-    return;
-  }
+      if (!token) {
+        setLoading(false);
+        setError("Not authenticated. Please log in again.");
+        return;
+      }
 
-  setLoading(true);
-  setError(null);
-  setSuccess(null);
+      setLoading(true);
+      setError(null);
+      setSuccess(null);
 
-  try {
-    const data = await getPatientProfile(token);
-    if (!alive) return;
+      try {
+        const data = await getPatientProfile(token);
+        if (!alive) return;
 
-    setServerProfile(data);
-    setForm(data);
-    setMedicalHistoryText(JSON.stringify(data.medicalHistory ?? {}, null, 2));
-  } catch (e) {
-    if (!alive) return;
-    const message =
-      e instanceof ApiError ? e.message : "Failed to load profile.";
-    setError(message);
-  } finally {
-    if (alive) setLoading(false);
-  }
-}
-
+        setServerProfile(data);
+        setForm(data);
+        setMedicalHistoryText(
+          JSON.stringify(data.medicalHistory ?? {}, null, 2),
+        );
+      } catch (e) {
+        if (!alive) return;
+        const message =
+          e instanceof ApiError ? e.message : "Failed to load profile.";
+        setError(message);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    }
 
     load();
     return () => {
@@ -89,7 +88,8 @@ export default function PatientProfilePage() {
       serverProfile.address !== form.address ||
       serverProfile.gender !== form.gender ||
       serverProfile.insuranceInfo !== form.insuranceInfo ||
-      serverMedicalText !== medicalHistoryText
+      serverMedicalText !== medicalHistoryText ||
+      serverProfile.profilePhotoBase64 !== form.profilePhotoBase64
     );
   }, [serverProfile, form, medicalHistoryText]);
 
@@ -109,6 +109,28 @@ export default function PatientProfilePage() {
     setError(null);
     setSuccess(null);
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
+  }
+
+  function onPhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const MAX_MB = 2;
+    if (file.size > MAX_MB * 1024 * 1024) {
+      setError("Image is too large. Max ${MAX_MB}MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setError(null);
+      setSuccess(null);
+      setForm((prev) =>
+        prev ? { ...prev, profilePhotoBase64: base64 } : prev,
+      );
+    };
+    reader.readAsDataURL(file);
   }
 
   function onCancel() {
@@ -146,7 +168,9 @@ export default function PatientProfilePage() {
 
       setServerProfile(saved);
       setForm(saved);
-      setMedicalHistoryText(JSON.stringify(saved.medicalHistory ?? {}, null, 2));
+      setMedicalHistoryText(
+        JSON.stringify(saved.medicalHistory ?? {}, null, 2),
+      );
       setSuccess("Profile saved");
       setIsEditing(false);
       setTimeout(() => setSuccess(null), 2000);
@@ -227,6 +251,26 @@ export default function PatientProfilePage() {
 
           {!loading && !isEditing && form && (
             <div className="space-y-4 text-sm">
+              <div className="flex items-center gap-4">
+                {form.profilePhotoBase64 ? (
+                  <img
+                    src={form.profilePhotoBase64}
+                    alt="Profile"
+                    className="h-20 w-20 rounded-full object-cover border"
+                  />
+                ) : (
+                  <div className="h-20 w-20 rounded-full border flex items-center justify-center text-xs text-default-500">
+                    No photo
+                  </div>
+                )}
+                <div className="text-sm">
+                  <p className="font-medium">
+                    {form.firstName} {form.lastName}
+                  </p>
+                  <p className="text-default-500">{form.gender || "—"}</p>
+                </div>
+              </div>
+
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <p className="text-xs uppercase tracking-wide text-default-500">
@@ -271,6 +315,7 @@ export default function PatientProfilePage() {
                   <p className="font-medium">{form.insuranceInfo || "—"}</p>
                 </div>
               </div>
+
               <div>
                 <p className="text-xs uppercase tracking-wide text-default-500">
                   Medical history
@@ -284,6 +329,26 @@ export default function PatientProfilePage() {
 
           {!loading && isEditing && form && (
             <div className="space-y-4">
+              {/* Photo uploader */}
+              <div className="flex items-center gap-4">
+                {form.profilePhotoBase64 ? (
+                  <img
+                    src={form.profilePhotoBase64}
+                    alt="Profile preview"
+                    className="h-20 w-20 rounded-full object-cover border"
+                  />
+                ) : (
+                  <div className="h-20 w-20 rounded-full border flex items-center justify-center text-xs text-default-500">
+                    No photo
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <input type="file" accept="image/*" onChange={onPhotoChange} />
+                  <p className="text-xs text-default-500">JPG/PNG, max 2MB</p>
+                </div>
+              </div>
+
               <div className="grid gap-4 md:grid-cols-2">
                 <Input
                   label="First name"
@@ -342,7 +407,10 @@ export default function PatientProfilePage() {
                   }}
                 />
                 <p className="mt-1 text-xs text-default-500">
-                  Example: {"{ \"allergies\": [\"pollen\"], \"notes\": \"...\" }"}
+                  Example:{" "}
+                  {
+                    '{ "allergies": ["pollen"], "notes": "..." }'
+                  }
                 </p>
               </div>
             </div>
