@@ -21,12 +21,14 @@ type DashboardNavbarProps = {
   title: string;
   onLogout: () => void;
   avatarLabel?: string | null;
+  avatarSrc?: string | null;
   userName?: string | null;
   links?: NavLink[];
 };
 
 export function DashboardNavbar(props: DashboardNavbarProps) {
-  const { title, onLogout, avatarLabel, userName, links = [] } = props;
+  const { title, onLogout, avatarLabel, avatarSrc, userName, links = [] } =
+    props;
   const pathname = usePathname();
 
   return (
@@ -60,12 +62,14 @@ export function DashboardNavbar(props: DashboardNavbarProps) {
           </NavbarItem>
         ) : null}
 
-        {avatarLabel ? (
+        {avatarLabel || avatarSrc ? (
           <NavbarItem>
             <Avatar
               name={avatarLabel || undefined}
+              src={avatarSrc || undefined}
               size="sm"
               className="bg-primary/20 text-primary-foreground"
+              isBordered
             />
           </NavbarItem>
         ) : null}
@@ -73,4 +77,3 @@ export function DashboardNavbar(props: DashboardNavbarProps) {
     </Navbar>
   );
 }
-

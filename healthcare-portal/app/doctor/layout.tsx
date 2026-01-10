@@ -1,18 +1,46 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { DashboardNavbar } from "@/components/navigation/DashboardNavbar";
 import { useAuth } from "@/lib/auth/auth-context";
+import { getDoctorProfile } from "@/lib/profile/doctor-api";
 
 type DoctorLayoutProps = {
   children: ReactNode;
 };
 
 export default function DoctorLayout({ children }: DoctorLayoutProps) {
-  const { user, logout } = useAuth();
+  const { user, token, isHydrating, logout } = useAuth();
   const router = useRouter();
+  const [avatarSrc, setAvatarSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+
+    async function loadAvatar() {
+      if (isHydrating) return;
+      if (!token) {
+        setAvatarSrc(null);
+        return;
+      }
+
+      try {
+        const profile = await getDoctorProfile(token);
+        if (!alive) return;
+        setAvatarSrc(profile.profilePhotoBase64 ?? null);
+      } catch {
+        if (!alive) return;
+        setAvatarSrc(null);
+      }
+    }
+
+    loadAvatar();
+    return () => {
+      alive = false;
+    };
+  }, [token, isHydrating]);
 
   const handleLogout = () => {
     logout();
@@ -26,10 +54,12 @@ export default function DoctorLayout({ children }: DoctorLayoutProps) {
           title="Doctor Portal"
           onLogout={handleLogout}
           avatarLabel={user?.name || "Doctor"}
+          avatarSrc={avatarSrc}
           userName={user?.name || "Doctor"}
           links={[
             { href: "/", label: "Home" },
             { href: "/doctor", label: "Dashboard" },
+            { href: "/doctor/appointments", label: "Appointments" },
             { href: "/doctor/availability", label: "Availability" },
             { href: "/doctor/profile", label: "Profile" },
           ]}

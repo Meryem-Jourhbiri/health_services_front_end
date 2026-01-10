@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { Avatar } from "@heroui/avatar";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
@@ -253,10 +254,11 @@ export default function PatientProfilePage() {
             <div className="space-y-4 text-sm">
               <div className="flex items-center gap-4">
                 {form.profilePhotoBase64 ? (
-                  <img
+                  <Avatar
                     src={form.profilePhotoBase64}
-                    alt="Profile"
-                    className="h-20 w-20 rounded-full object-cover border"
+                    name={`${form.firstName} ${form.lastName}`}
+                    className="h-20 w-20"
+                    isBordered
                   />
                 ) : (
                   <div className="h-20 w-20 rounded-full border flex items-center justify-center text-xs text-default-500">
@@ -332,10 +334,11 @@ export default function PatientProfilePage() {
               {/* Photo uploader */}
               <div className="flex items-center gap-4">
                 {form.profilePhotoBase64 ? (
-                  <img
+                  <Avatar
                     src={form.profilePhotoBase64}
-                    alt="Profile preview"
-                    className="h-20 w-20 rounded-full object-cover border"
+                    name={`${form.firstName} ${form.lastName}`}
+                    className="h-20 w-20"
+                    isBordered
                   />
                 ) : (
                   <div className="h-20 w-20 rounded-full border flex items-center justify-center text-xs text-default-500">
@@ -344,7 +347,12 @@ export default function PatientProfilePage() {
                 )}
 
                 <div className="space-y-2">
-                  <input type="file" accept="image/*" onChange={onPhotoChange} />
+                  <Input
+                    type="file"
+                    label="Profile photo"
+                    accept="image/*"
+                    onChange={onPhotoChange}
+                  />
                   <p className="text-xs text-default-500">JPG/PNG, max 2MB</p>
                 </div>
               </div>
@@ -420,5 +428,3 @@ export default function PatientProfilePage() {
     </div>
   );
 }
-
-
