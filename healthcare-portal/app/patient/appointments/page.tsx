@@ -26,6 +26,12 @@ import {
   type AppointmentStatus,
   type DoctorSummary,
 } from "@/lib/appointments/appointments-api";
+import {
+  createReview,
+  deleteReview,
+  updateReview,
+  type Review,
+} from "@/lib/reviews/reviews-api";
 
 const statusOptions: Array<{ value: AppointmentStatus | "ALL"; label: string }> =
   [
@@ -44,7 +50,7 @@ const emptyBooking = {
 };
 
 export default function PatientAppointmentsPage() {
-  const { user, isHydrating } = useAuth();
+  const { user, token, isHydrating } = useAuth();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [doctors, setDoctors] = useState<DoctorSummary[]>([]);
   const [slots, setSlots] = useState<Array<{ time: string; available: boolean }>>(
@@ -63,6 +69,12 @@ export default function PatientAppointmentsPage() {
     date: "",
     time: "",
   });
+  const [reviewTarget, setReviewTarget] = useState<Appointment | null>(null);
+  const [reviewForm, setReviewForm] = useState({ rating: "5", comment: "" });
+  const [reviewMap, setReviewMap] = useState<Record<string, Review>>({});
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+  const [reviewSuccess, setReviewSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -214,6 +226,21 @@ export default function PatientAppointmentsPage() {
     setRescheduleForm({ date: appointment.date, time: appointment.time });
   }
 
+  function beginReview(appointment: Appointment) {
+    setReviewError(null);
+    setReviewSuccess(null);
+    setReviewTarget(appointment);
+    const existing = reviewMap[appointment.id];
+    if (existing) {
+      setReviewForm({
+        rating: String(existing.rating),
+        comment: existing.comment ?? "",
+      });
+      return;
+    }
+    setReviewForm({ rating: "5", comment: "" });
+  }
+
   async function handleRescheduleSubmit(
     event: React.FormEvent<HTMLFormElement>,
   ) {
@@ -240,6 +267,70 @@ export default function PatientAppointmentsPage() {
       setError(message);
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleReviewSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!reviewTarget) return;
+    if (!token) {
+      setReviewError("Not authenticated. Please log in again.");
+      return;
+    }
+
+    setReviewSubmitting(true);
+    setReviewError(null);
+    setReviewSuccess(null);
+
+    try {
+      const payload = {
+        appointmentId: reviewTarget.id,
+        rating: Number(reviewForm.rating),
+        comment: reviewForm.comment.trim() || undefined,
+      };
+      const existing = reviewMap[reviewTarget.id];
+      const saved = existing
+        ? await updateReview(token, existing.id, payload)
+        : await createReview(token, payload);
+      setReviewMap((current) => ({ ...current, [reviewTarget.id]: saved }));
+      setReviewSuccess(
+        existing ? "Review updated successfully." : "Review submitted.",
+      );
+      setReviewTarget(null);
+    } catch (e) {
+      const message =
+        e instanceof ApiError ? e.message : "Unable to submit review.";
+      setReviewError(message);
+    } finally {
+      setReviewSubmitting(false);
+    }
+  }
+
+  async function handleReviewDelete(appointment: Appointment) {
+    const existing = reviewMap[appointment.id];
+    if (!existing) return;
+    if (!token) {
+      setReviewError("Not authenticated. Please log in again.");
+      return;
+    }
+    if (!confirm("Delete this review?")) return;
+    setReviewSubmitting(true);
+    setReviewError(null);
+    setReviewSuccess(null);
+    try {
+      await deleteReview(token, existing.id);
+      setReviewMap((current) => {
+        const updated = { ...current };
+        delete updated[appointment.id];
+        return updated;
+      });
+      setReviewSuccess("Review deleted.");
+    } catch (e) {
+      const message =
+        e instanceof ApiError ? e.message : "Unable to delete review.";
+      setReviewError(message);
+    } finally {
+      setReviewSubmitting(false);
     }
   }
 
@@ -440,6 +531,10 @@ export default function PatientAppointmentsPage() {
 
       {error ? <p className="text-sm text-danger">{error}</p> : null}
       {success ? <p className="text-sm text-success">{success}</p> : null}
+      {reviewError ? <p className="text-sm text-danger">{reviewError}</p> : null}
+      {reviewSuccess ? (
+        <p className="text-sm text-success">{reviewSuccess}</p>
+      ) : null}
 
       {rescheduleTarget ? (
         <Card>
@@ -504,6 +599,87 @@ export default function PatientAppointmentsPage() {
         </Card>
       ) : null}
 
+      {reviewTarget ? (
+        <Card>
+          <CardHeader>
+            <div>
+              <h2 className="text-lg font-semibold">Leave a review</h2>
+              <p className="text-sm text-default-500">
+                {reviewTarget.doctorName} - {reviewTarget.specialty}
+              </p>
+            </div>
+          </CardHeader>
+          <CardBody>
+            <form onSubmit={handleReviewSubmit} className="space-y-4">
+              <div className="grid gap-3 md:grid-cols-[180px,1fr]">
+                <div className="space-y-2">
+                  <label
+                    htmlFor="rating"
+                    className="text-sm font-medium text-default-600"
+                  >
+                    Rating
+                  </label>
+                  <select
+                    id="rating"
+                    value={reviewForm.rating}
+                    onChange={(event) =>
+                      setReviewForm((current) => ({
+                        ...current,
+                        rating: event.target.value,
+                      }))
+                    }
+                    className="w-full rounded-large border border-default-200 bg-content1 px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
+                  >
+                    {[5, 4, 3, 2, 1].map((value) => (
+                      <option key={value} value={String(value)}>
+                        {value} stars
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label
+                    htmlFor="comment"
+                    className="text-sm font-medium text-default-600"
+                  >
+                    Comment
+                  </label>
+                  <textarea
+                    id="comment"
+                    className="w-full rounded-large border border-default-200 bg-content1 px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
+                    rows={3}
+                    value={reviewForm.comment}
+                    onChange={(event) =>
+                      setReviewForm((current) => ({
+                        ...current,
+                        comment: event.target.value,
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+              <div className="flex items-center justify-end gap-2">
+                <Button
+                  type="submit"
+                  color="primary"
+                  radius="full"
+                  isLoading={reviewSubmitting}
+                >
+                  Submit review
+                </Button>
+                <Button
+                  variant="light"
+                  radius="full"
+                  onPress={() => setReviewTarget(null)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </CardBody>
+        </Card>
+      ) : null}
+
       <Card>
         <CardHeader>
           <div>
@@ -556,6 +732,29 @@ export default function PatientAppointmentsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
+                        {appointment.status === "COMPLETED" ? (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="flat"
+                              onPress={() => beginReview(appointment)}
+                            >
+                              {reviewMap[appointment.id]
+                                ? "Edit review"
+                                : "Review"}
+                            </Button>
+                            {reviewMap[appointment.id] ? (
+                              <Button
+                                size="sm"
+                                color="danger"
+                                variant="light"
+                                onPress={() => handleReviewDelete(appointment)}
+                              >
+                                Delete
+                              </Button>
+                            ) : null}
+                          </>
+                        ) : null}
                         <Button
                           size="sm"
                           variant="light"
