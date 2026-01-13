@@ -61,6 +61,7 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
             { href: "/", label: "Home" },
             { href: "/patient", label: "Dashboard" },
             { href: "/patient/appointments", label: "Appointments" },
+            { href: "/patient/doctors", label: "Doctors"},
             { href: "/patient/profile", label: "Profile" },
           ]}
         />
