@@ -16,8 +16,16 @@ Milestone 1 introduces login + recovery flows shared by doctors and patients:
 
 Create `.env.local` to point to the backend (falls back to mock responses if absent):
 
-```
+```text
+# locally hosted backend
 NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
+```
+
+or
+
+```text
+# cloud hosted backend
+NEXT_PUBLIC_API_BASE_URL=https://healthapp-backend-v2-186862202342.us-central1.run.app
 ```
 
 With the env var unset, the UI still works via mock responses so flows are testable without the API.
