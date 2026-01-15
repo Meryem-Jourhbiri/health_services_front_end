@@ -13,8 +13,8 @@ November 3, 2025 - January 31, 2026 (13 weeks)
 | M0 | ✅ DONE | Requirements, Planning, and Setup |
 | M1 | ✅ DONE | Authentication and Frontend Foundations |
 | M2 | ✅ DONE | Profiles and Availability Integration |
-| M3 | 🔄 IN PROGRESS | Appointments, Search, Reviews, and Admin |
-| M4 | Jan 26 | Deployment, Testing |
+| M3 | ✅ DONE | Appointments, Doctor Search, and Review Management |
+| M4 | Jan 26 | Admin Panel and Vercel Deployment |
 | Final | Jan 31 | Final Delivery |
 
 ---
