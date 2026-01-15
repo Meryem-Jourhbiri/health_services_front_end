@@ -14,14 +14,36 @@ export type Appointment = {
   patientName: string;
   doctorId: string;
   doctorName: string;
-  specialty: string;
-  location: string;
-  date: string; // YYYY-MM-DD
-  time: string; // HH:MM
+  specialty?: string;
+  doctorSpecialization?: string;
+  location?: string;
+  date?: string; // YYYY-MM-DD
+  appointmentDate?: string; // YYYY-MM-DD
+  time?: string; // HH:MM
+  startTime?: string; // HH:MM:SS
+  endTime?: string; // HH:MM:SS
   reason: string;
   status: AppointmentStatus;
-  createdAt: string;
-  updatedAt: string;
+  notes?: string | null;
+  rescheduleCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type AppointmentApiResponse = {
+  id: string;
+  patientId: string;
+  patientName: string;
+  doctorId: string;
+  doctorName: string;
+  doctorSpecialization?: string;
+  appointmentDate?: string;
+  startTime?: string;
+  endTime?: string;
+  status: AppointmentStatus;
+  reason: string;
+  notes?: string | null;
+  rescheduleCount?: number;
 };
 
 export type AppointmentFilters = {
@@ -38,6 +60,7 @@ export type AppointmentPayload = {
   doctorId: string;
   date: string;
   time: string;
+  endTime: string;
   reason: string;
 };
 
@@ -59,6 +82,14 @@ export type DoctorSummary = {
 
 export type TimeSlot = {
   time: string;
+  endTime: string;
+  available: boolean;
+};
+
+export type AvailabilitySlot = {
+  date?: string;
+  startTime: string;
+  endTime: string;
   available: boolean;
 };
 
@@ -229,6 +260,42 @@ function nextDate(daysFromNow: number) {
   return date.toISOString().slice(0, 10);
 }
 
+function normalizeAppointment(
+  appointment: Appointment | AppointmentApiResponse,
+): Appointment {
+  const appointmentDate =
+    "appointmentDate" in appointment
+      ? appointment.appointmentDate
+      : appointment.date;
+  const startTime =
+    "startTime" in appointment ? appointment.startTime : appointment.time;
+  const endTime =
+    "endTime" in appointment ? appointment.endTime : appointment.endTime;
+  const specialty =
+    "doctorSpecialization" in appointment
+      ? appointment.doctorSpecialization
+      : appointment.specialty;
+
+  return {
+    ...appointment,
+    appointmentDate: appointmentDate ?? appointment.appointmentDate ?? "",
+    startTime: startTime ?? appointment.startTime ?? "",
+    endTime: endTime ?? appointment.endTime ?? "",
+    doctorSpecialization: specialty ?? appointment.doctorSpecialization ?? "",
+    date: appointmentDate ?? appointment.date ?? "",
+    time: startTime ? startTime.slice(0, 5) : appointment.time ?? "",
+    specialty: specialty ?? appointment.specialty ?? "",
+  };
+}
+
+function addMinutes(time: string, minutes: number) {
+  const [hours, mins] = time.split(":").map(Number);
+  if (Number.isNaN(hours) || Number.isNaN(mins)) return time;
+  const date = new Date();
+  date.setHours(hours, mins + minutes, 0, 0);
+  return date.toTimeString().slice(0, 5);
+}
+
 function assertBookingFields(payload: AppointmentPayload) {
   if (!payload.patientId || !payload.patientName) {
     throw new ApiError("Patient information is missing.");
@@ -236,8 +303,8 @@ function assertBookingFields(payload: AppointmentPayload) {
   if (!payload.doctorId) {
     throw new ApiError("Doctor selection is required.");
   }
-  if (!payload.date || !payload.time) {
-    throw new ApiError("Date and time are required.");
+  if (!payload.date || !payload.time || !payload.endTime) {
+    throw new ApiError("Date, start time, and end time are required.");
   }
 }
 
@@ -304,13 +371,18 @@ export async function getAppointments(
     }
     const queryString = params.toString();
     const path = `/api/appointments${queryString ? `?${queryString}` : ""}`;
-    return request<Appointment[]>(path, { method: "GET" }, token);
+    const data = await request<AppointmentApiResponse[]>(
+      path,
+      { method: "GET" },
+      token,
+    );
+    return data.map(normalizeAppointment);
   }
 
   // Mock mode
   await wait();
   const appointments = getStore();
-  return applyFilters(appointments, filters);
+  return applyFilters(appointments, filters).map(normalizeAppointment);
 }
 
 export async function getAppointmentById(
@@ -319,7 +391,12 @@ export async function getAppointmentById(
 ): Promise<Appointment> {
   // Real API mode
   if (API_BASE_URL && token) {
-    return request<Appointment>(`/api/appointments/${id}`, { method: "GET" }, token);
+    const data = await request<AppointmentApiResponse>(
+      `/api/appointments/${id}`,
+      { method: "GET" },
+      token,
+    );
+    return normalizeAppointment(data);
   }
 
   // Mock mode
@@ -329,7 +406,7 @@ export async function getAppointmentById(
   if (!appointment) {
     throw new ApiError("Appointment not found.", 404);
   }
-  return appointment;
+  return normalizeAppointment(appointment);
 }
 
 export async function bookAppointment(
@@ -340,14 +417,28 @@ export async function bookAppointment(
 
   // Real API mode
   if (API_BASE_URL && token) {
-    return request<Appointment>(
+    const startTime =
+      payload.time.length === 5 ? `${payload.time}:00` : payload.time;
+    const endTime =
+      payload.endTime.length === 5 ? `${payload.endTime}:00` : payload.endTime;
+    const apiPayload = {
+      patientId: payload.patientId,
+      patientName: payload.patientName,
+      doctorId: payload.doctorId,
+      appointmentDate: payload.date,
+      startTime,
+      endTime,
+      reason: payload.reason,
+    };
+    const data = await request<AppointmentApiResponse>(
       "/api/appointments",
       {
         method: "POST",
-        body: JSON.stringify(payload),
+        body: JSON.stringify(apiPayload),
       },
       token,
     );
+    return normalizeAppointment(data);
   }
 
   // Mock mode
@@ -368,9 +459,13 @@ export async function bookAppointment(
     doctorId: doctor.id,
     doctorName: doctor.name,
     specialty: doctor.specialty,
+    doctorSpecialization: doctor.specialty,
     location: doctor.location,
     date: payload.date,
+    appointmentDate: payload.date,
     time: payload.time,
+    startTime: payload.time,
+    endTime: payload.endTime,
     reason: payload.reason || "General consultation",
     status: "PENDING",
     createdAt: now,
@@ -388,11 +483,12 @@ export async function cancelAppointment(
 ): Promise<Appointment> {
   // Real API mode
   if (API_BASE_URL && token) {
-    return request<Appointment>(
+    const data = await request<AppointmentApiResponse>(
       `/api/appointments/${id}/cancel`,
       { method: "PUT" },
       token,
     );
+    return normalizeAppointment(data);
   }
 
   // Mock mode
@@ -408,7 +504,7 @@ export async function cancelAppointment(
     updatedAt: new Date().toISOString(),
   };
   saveStore(appointments);
-  return appointments[index];
+  return normalizeAppointment(appointments[index]);
 }
 
 export async function rescheduleAppointment(
@@ -422,7 +518,7 @@ export async function rescheduleAppointment(
 
   // Real API mode
   if (API_BASE_URL && token) {
-    return request<Appointment>(
+    const data = await request<AppointmentApiResponse>(
       `/api/appointments/${id}/reschedule`,
       {
         method: "PUT",
@@ -430,6 +526,7 @@ export async function rescheduleAppointment(
       },
       token,
     );
+    return normalizeAppointment(data);
   }
 
   // Mock mode
@@ -457,7 +554,7 @@ export async function rescheduleAppointment(
     updatedAt: new Date().toISOString(),
   };
   saveStore(appointments);
-  return appointments[index];
+  return normalizeAppointment(appointments[index]);
 }
 
 export async function updateAppointmentStatus(
@@ -505,11 +602,23 @@ export async function getAvailableSlots(
   // Real API mode - use availability API endpoint
   if (API_BASE_URL && token) {
     try {
-      return request<TimeSlot[]>(
+      const data = await request<Array<TimeSlot | AvailabilitySlot>>(
         `/api/availability/slots/${doctorId}?date=${date}`,
         { method: "GET" },
         token,
       );
+      return data.map((slot) => {
+        if ("time" in slot) {
+          return {
+            time: slot.time,
+            endTime: addMinutes(slot.time, 30),
+            available: slot.available,
+          };
+        }
+        const time = slot.startTime?.slice(0, 5) || slot.startTime;
+        const endTime = slot.endTime?.slice(0, 5) || slot.endTime;
+        return { time, endTime, available: slot.available };
+      });
     } catch (error) {
       console.error("Failed to fetch available slots:", error);
       return [];
@@ -521,6 +630,7 @@ export async function getAvailableSlots(
   const appointments = getStore();
   return timeSlots.map((slot) => ({
     time: slot,
+    endTime: addMinutes(slot, 30),
     available: !appointments.some(
       (apt) =>
         apt.doctorId === doctorId &&
@@ -531,44 +641,9 @@ export async function getAvailableSlots(
   }));
 }
 
-export async function getDoctors(
-  token?: string | null,
-): Promise<DoctorSummary[]> {
-  // Real API mode - use doctor search API
-  if (API_BASE_URL && token) {
-    try {
-      // Get all doctors (no filters)
-      type DoctorSearchResult = {
-        id?: string;
-        userId?: string;
-        firstName?: string;
-        lastName?: string;
-        name?: string;
-        specialization?: string;
-        specialty?: string;
-        city?: string;
-        location?: string;
-      };
-      const doctors = await request<DoctorSearchResult[]>(
-        "/api/doctors/search",
-        { method: "GET" },
-        token,
-      );
-      // Map to DoctorSummary format
-      console.log("Fetched doctors from API:", doctors);
-      return doctors.map((doc) => ({
-        id: doc.id || doc.userId || "",
-        name: `${doc.firstName || ""} ${doc.lastName || ""}`.trim() || doc.name || "Unknown Doctor",
-        specialty: doc.specialization || doc.specialty || "General Practice",
-        location: doc.city || doc.location || "Unknown Location",
-      }));
-    } catch (error) {
-      console.error("Failed to fetch doctors:", error);
-      // Fall back to mock data on error
-    }
-  }
-
-  // Mock mode
+export async function getDoctors(): Promise<DoctorSummary[]> {
+  // This function is deprecated - booking happens from doctor detail page
+  // Kept for backward compatibility with existing appointments page
   await wait();
-  return mockDoctors;
+  return [];
 }
