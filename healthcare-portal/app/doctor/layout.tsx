@@ -57,8 +57,7 @@ export default function DoctorLayout({ children }: DoctorLayoutProps) {
           avatarSrc={avatarSrc}
           userName={user?.name || "Doctor"}
           links={[
-            { href: "/", label: "Home" },
-            { href: "/doctor", label: "Dashboard" },
+            { href: "/doctor", label: "Home" },
             { href: "/doctor/appointments", label: "Appointments" },
             { href: "/doctor/availability", label: "Availability" },
             { href: "/doctor/profile", label: "Profile" },
