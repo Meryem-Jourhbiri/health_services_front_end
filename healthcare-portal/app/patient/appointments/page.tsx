@@ -20,7 +20,7 @@ import {
   cancelAppointment,
   getAppointments,
   getAvailableSlots,
-  getMockDoctors,
+  getDoctors,
   rescheduleAppointment,
   type Appointment,
   type AppointmentStatus,
@@ -101,14 +101,17 @@ export default function PatientAppointmentsPage() {
 
       try {
         const [appointmentData, doctorData] = await Promise.all([
-          getAppointments({
-            role: "patient",
-            userId: user.id,
-            status: filters.status,
-            startDate: filters.startDate,
-            endDate: filters.endDate,
-          }),
-          getMockDoctors(),
+          getAppointments(
+            {
+              role: "patient",
+              userId: user.id,
+              status: filters.status,
+              startDate: filters.startDate,
+              endDate: filters.endDate,
+            },
+            token,
+          ),
+          getDoctors(token),
         ]);
         if (!alive) return;
         setAppointments(appointmentData);
@@ -142,6 +145,7 @@ export default function PatientAppointmentsPage() {
         const slotData = await getAvailableSlots(
           booking.doctorId,
           booking.date,
+          token,
         );
         if (!alive) return;
         setSlots(slotData);
@@ -165,24 +169,30 @@ export default function PatientAppointmentsPage() {
     setSuccess(null);
 
     try {
-      await bookAppointment({
-        patientId: user.id,
-        patientName: user.name,
-        doctorId: booking.doctorId,
-        date: booking.date,
-        time: booking.time,
-        reason: booking.reason,
-      });
+      await bookAppointment(
+        {
+          patientId: user.id,
+          patientName: user.name,
+          doctorId: booking.doctorId,
+          date: booking.date,
+          time: booking.time,
+          reason: booking.reason,
+        },
+        token,
+      );
       setBooking(emptyBooking);
       setSlots([]);
       setSuccess("Appointment requested. Awaiting confirmation.");
-      const updated = await getAppointments({
-        role: "patient",
-        userId: user.id,
-        status: filters.status,
-        startDate: filters.startDate,
-        endDate: filters.endDate,
-      });
+      const updated = await getAppointments(
+        {
+          role: "patient",
+          userId: user.id,
+          status: filters.status,
+          startDate: filters.startDate,
+          endDate: filters.endDate,
+        },
+        token,
+      );
       setAppointments(updated);
     } catch (e) {
       const message =
@@ -202,15 +212,18 @@ export default function PatientAppointmentsPage() {
     setError(null);
     setSuccess(null);
     try {
-      await cancelAppointment(id);
+      await cancelAppointment(id, token);
       setSuccess("Appointment cancelled.");
-      const updated = await getAppointments({
-        role: "patient",
-        userId: user.id,
-        status: filters.status,
-        startDate: filters.startDate,
-        endDate: filters.endDate,
-      });
+      const updated = await getAppointments(
+        {
+          role: "patient",
+          userId: user.id,
+          status: filters.status,
+          startDate: filters.startDate,
+          endDate: filters.endDate,
+        },
+        token,
+      );
       setAppointments(updated);
     } catch (e) {
       const message =
@@ -250,16 +263,19 @@ export default function PatientAppointmentsPage() {
     setError(null);
     setSuccess(null);
     try {
-      await rescheduleAppointment(rescheduleTarget.id, rescheduleForm);
+      await rescheduleAppointment(rescheduleTarget.id, rescheduleForm, token);
       setSuccess("Appointment rescheduled.");
       setRescheduleTarget(null);
-      const updated = await getAppointments({
-        role: "patient",
-        userId: user.id,
-        status: filters.status,
-        startDate: filters.startDate,
-        endDate: filters.endDate,
-      });
+      const updated = await getAppointments(
+        {
+          role: "patient",
+          userId: user.id,
+          status: filters.status,
+          startDate: filters.startDate,
+          endDate: filters.endDate,
+        },
+        token,
+      );
       setAppointments(updated);
     } catch (e) {
       const message =

@@ -1,5 +1,7 @@
 import { ApiError } from "@/lib/auth/api";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 export type AppointmentStatus =
   | "PENDING"
   | "CONFIRMED"
@@ -59,6 +61,48 @@ export type TimeSlot = {
   time: string;
   available: boolean;
 };
+
+// Helper function for API requests
+async function request<T>(
+  path: string,
+  init: RequestInit,
+  token?: string | null,
+): Promise<T> {
+  const BASE_URL = API_BASE_URL?.replace(/\/$/, "");
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(init.headers as Record<string, string>),
+  };
+  
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  
+  const response = await fetch(`${BASE_URL}${path}`, {
+    ...init,
+    headers,
+  });
+
+  if (!response.ok) {
+    let message = "Request failed";
+    try {
+      const data = await response.json();
+      message =
+        (data as { message?: string; error?: string }).message ||
+        (data as { message?: string; error?: string }).error ||
+        message;
+    } catch {
+      message = (await response.text()) || message;
+    }
+    throw new ApiError(message, response.status);
+  }
+
+  if (response.status === 204) {
+    return {} as T;
+  }
+
+  return (await response.json()) as T;
+}
 
 const STORAGE_KEY = "health-services-appointments";
 
@@ -244,13 +288,41 @@ function applyFilters(appointments: Appointment[], filters: AppointmentFilters) 
 
 export async function getAppointments(
   filters: AppointmentFilters,
+  token?: string | null,
 ): Promise<Appointment[]> {
+  // Real API mode
+  if (API_BASE_URL && token) {
+    const params = new URLSearchParams();
+    if (filters.status && filters.status !== "ALL") {
+      params.append("status", filters.status);
+    }
+    if (filters.startDate) {
+      params.append("startDate", filters.startDate);
+    }
+    if (filters.endDate) {
+      params.append("endDate", filters.endDate);
+    }
+    const queryString = params.toString();
+    const path = `/api/appointments${queryString ? `?${queryString}` : ""}`;
+    return request<Appointment[]>(path, { method: "GET" }, token);
+  }
+
+  // Mock mode
   await wait();
   const appointments = getStore();
   return applyFilters(appointments, filters);
 }
 
-export async function getAppointmentById(id: string): Promise<Appointment> {
+export async function getAppointmentById(
+  id: string,
+  token?: string | null,
+): Promise<Appointment> {
+  // Real API mode
+  if (API_BASE_URL && token) {
+    return request<Appointment>(`/api/appointments/${id}`, { method: "GET" }, token);
+  }
+
+  // Mock mode
   await wait();
   const appointments = getStore();
   const appointment = appointments.find((apt) => apt.id === id);
@@ -262,10 +334,24 @@ export async function getAppointmentById(id: string): Promise<Appointment> {
 
 export async function bookAppointment(
   payload: AppointmentPayload,
+  token?: string | null,
 ): Promise<Appointment> {
-  await wait();
   assertBookingFields(payload);
 
+  // Real API mode
+  if (API_BASE_URL && token) {
+    return request<Appointment>(
+      "/api/appointments",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+      token,
+    );
+  }
+
+  // Mock mode
+  await wait();
   const appointments = getStore();
   const doctor = mockDoctors.find((item) => item.id === payload.doctorId);
   if (!doctor) {
@@ -296,7 +382,20 @@ export async function bookAppointment(
   return appointment;
 }
 
-export async function cancelAppointment(id: string): Promise<Appointment> {
+export async function cancelAppointment(
+  id: string,
+  token?: string | null,
+): Promise<Appointment> {
+  // Real API mode
+  if (API_BASE_URL && token) {
+    return request<Appointment>(
+      `/api/appointments/${id}/cancel`,
+      { method: "PUT" },
+      token,
+    );
+  }
+
+  // Mock mode
   await wait();
   const appointments = getStore();
   const index = appointments.findIndex((apt) => apt.id === id);
@@ -315,12 +414,26 @@ export async function cancelAppointment(id: string): Promise<Appointment> {
 export async function rescheduleAppointment(
   id: string,
   payload: AppointmentReschedulePayload,
+  token?: string | null,
 ): Promise<Appointment> {
-  await wait();
   if (!payload.date || !payload.time) {
     throw new ApiError("New date and time are required.");
   }
 
+  // Real API mode
+  if (API_BASE_URL && token) {
+    return request<Appointment>(
+      `/api/appointments/${id}/reschedule`,
+      {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      },
+      token,
+    );
+  }
+
+  // Mock mode
+  await wait();
   const appointments = getStore();
   const index = appointments.findIndex((apt) => apt.id === id);
   if (index < 0) {
@@ -350,7 +463,21 @@ export async function rescheduleAppointment(
 export async function updateAppointmentStatus(
   id: string,
   payload: AppointmentStatusPayload,
+  token?: string | null,
 ): Promise<Appointment> {
+  // Real API mode
+  if (API_BASE_URL && token) {
+    return request<Appointment>(
+      `/api/appointments/${id}/status`,
+      {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      },
+      token,
+    );
+  }
+
+  // Mock mode
   await wait();
   const appointments = getStore();
   const index = appointments.findIndex((apt) => apt.id === id);
@@ -369,11 +496,28 @@ export async function updateAppointmentStatus(
 export async function getAvailableSlots(
   doctorId: string,
   date: string,
+  token?: string | null,
 ): Promise<TimeSlot[]> {
-  await wait();
   if (!doctorId || !date) {
     return [];
   }
+
+  // Real API mode - use availability API endpoint
+  if (API_BASE_URL && token) {
+    try {
+      return request<TimeSlot[]>(
+        `/api/availability/slots/${doctorId}?date=${date}`,
+        { method: "GET" },
+        token,
+      );
+    } catch (error) {
+      console.error("Failed to fetch available slots:", error);
+      return [];
+    }
+  }
+
+  // Mock mode
+  await wait();
   const appointments = getStore();
   return timeSlots.map((slot) => ({
     time: slot,
@@ -387,7 +531,44 @@ export async function getAvailableSlots(
   }));
 }
 
-export async function getMockDoctors(): Promise<DoctorSummary[]> {
+export async function getDoctors(
+  token?: string | null,
+): Promise<DoctorSummary[]> {
+  // Real API mode - use doctor search API
+  if (API_BASE_URL && token) {
+    try {
+      // Get all doctors (no filters)
+      type DoctorSearchResult = {
+        id?: string;
+        userId?: string;
+        firstName?: string;
+        lastName?: string;
+        name?: string;
+        specialization?: string;
+        specialty?: string;
+        city?: string;
+        location?: string;
+      };
+      const doctors = await request<DoctorSearchResult[]>(
+        "/api/doctors/search",
+        { method: "GET" },
+        token,
+      );
+      // Map to DoctorSummary format
+      console.log("Fetched doctors from API:", doctors);
+      return doctors.map((doc) => ({
+        id: doc.id || doc.userId || "",
+        name: `${doc.firstName || ""} ${doc.lastName || ""}`.trim() || doc.name || "Unknown Doctor",
+        specialty: doc.specialization || doc.specialty || "General Practice",
+        location: doc.city || doc.location || "Unknown Location",
+      }));
+    } catch (error) {
+      console.error("Failed to fetch doctors:", error);
+      // Fall back to mock data on error
+    }
+  }
+
+  // Mock mode
   await wait();
   return mockDoctors;
 }
