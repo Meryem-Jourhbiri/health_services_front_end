@@ -182,26 +182,6 @@ Milestone 3 delivers the end-to-end care discovery and scheduling experience. It
 
 ### M3 Scope
 
-#### Appointment Management
-
-- **Patient Booking**
-  - Select doctor
-  - Select time slot
-  - handle/prevent double-booking
-  - Cancel booking
-  - Reschedule booking
-- **Doctor/Patient View**
-  - Patients can see their bookings
-  - Doctors can see their schedule
-  - Filter by status (PENDING, CONFIRMED, COMPLETED, CANCELLED), date range
-- **Appointment Endpoints**
-  - `POST /api/appointments` - Book appointment
-  - `GET /api/appointments` - List user's appointments
-  - `GET /api/appointments/{id}` - Get appointment details
-  - `PUT /api/appointments/{id}/cancel` - Cancel appointment
-  - `PUT /api/appointments/{id}/reschedule` - Reschedule appointment
-  - `PUT /api/appointments/{id}/status` - Update status (doctor only)
-
 #### Doctor Search
 
 - **Doctor Search**
@@ -211,16 +191,38 @@ Milestone 3 delivers the end-to-end care discovery and scheduling experience. It
   - Filter by availability (date/time)
   - Filter by minimum rating
   - Sort by: rating, experience
-- **Doctor Detail**
-  - View public profile
-  - Average rating
-  - Available time-slots
+- **Search Results**
+  - Display card for each doctor using doctor info returned from doctor search. Card to include avatar, name, specialization, rating, etc.
+  - Book appointment button on each card should open a separate appointment booking page.
+- **Patient Booking**
+  - Doctor name pre-filled based on doctor search selection
+  - Select time slot
+  - handle/prevent double-booking
+  - Cancel booking
+  - Reschedule booking
 - **Doctor Search Endpoints**
   - `GET /api/doctors/search` - Search doctors
   - `GET /api/doctors/{id}` - Get doctor details
     - Profile
     - Availability
     - Reviews
+
+#### Appointment Management
+
+- **Patient View**
+  - Patients can see their bookings
+  - Patient can manage their bookings
+  - Filter by status (PENDING, CONFIRMED, COMPLETED, CANCELLED), date range
+- **Doctor View**
+  - Doctors can see their schedule
+  - Filter by status (PENDING, CONFIRMED, COMPLETED, CANCELLED), date range
+- **Appointment Endpoints**
+  - `POST /api/appointments` - Book appointment
+  - `GET /api/appointments` - List user's appointments
+  - `GET /api/appointments/{id}` - Get appointment details
+  - `PUT /api/appointments/{id}/cancel` - Cancel appointment
+  - `PUT /api/appointments/{id}/reschedule` - Reschedule appointment
+  - `PUT /api/appointments/{id}/status` - Update status (doctor only)
 
 #### Review System
 
