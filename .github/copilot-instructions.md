@@ -43,7 +43,7 @@ npm run lint         # runs ESLint
 Create `healthcare-portal/.env.local` to enable live API (omit for mock mode):
 
 ```
-NEXT_PUBLIC_API_BASE_URL=https://healthapp-186862202342.us-central1.run.app/
+NEXT_PUBLIC_API_BASE_URL=https://healthapp-backend-v2-186862202342.us-central1.run.app
 ```
 
 With env unset, app uses mock responses so all flows work without backend.
@@ -104,8 +104,8 @@ With env unset, app uses mock responses so all flows work without backend.
 
 ### API Integration
 
-- **Backend API**: https://healthapp-186862202342.us-central1.run.app/swagger-ui/index.html
-- **Base URL**: `https://healthapp-186862202342.us-central1.run.app/` (set in `NEXT_PUBLIC_API_BASE_URL`)
+- **Backend API**: https://healthapp-backend-v2-186862202342.us-central1.run.app/swagger-ui/index.html
+- **Base URL**: `https://healthapp-backend-v2-186862202342.us-central1.run.app`)
 - **Key API Endpoints**:
   - **Authentication**: `/api/auth/login`, `/api/auth/register`, `/api/auth/verify-email`, `/api/auth/forgot-password`, `/api/auth/reset-password`, `/api/auth/logout`
   - **Profile Management**: `/api/profile/patient`, `/api/profile/doctor` (GET, PUT, DELETE)
@@ -134,6 +134,17 @@ With env unset, app uses mock responses so all flows work without backend.
 
 ## Documentation Reference
 
-- **[Milestones/Milestone1/Architecture.md](../Milestones/Milestone1/Architecture.md)** – detailed architecture walkthrough.
-- **[Milestones/Milestone0/Functional_Requirements.md](../Milestones/Milestone0/Functional_Requirements.md)** – product requirements for patient/doctor flows.
+### Frontend Docs
+
+- **[Frontend Project Plan](../Milestones/Milestone0/Project_Plan.md)** – detailed project planning and milestones overview.
+- **[Milestones/Milestone0/Functional_Requirements.md](../Milestones/Milestone0/Functional_Requirements.md)** – high-level product requirements .
+- **[Milestones/Milestone1/Architecture.md](../Milestones/Milestone1/Architecture.md)** – Milestone 1 architecture.
 - **[healthcare-portal/README.md](../healthcare-portal/README.md)** – quick start guide and API configuration.
+
+### Backend Docs
+
+- **[Backend API Swagger](https://healthapp-backend-v2-186862202342.us-central1.run.app/swagger-ui/index.html)** – full API reference for all endpoints, payloads, responses.
+- **[Backend Project Plan](https://github.com/sweng-plus/res-spw25-health_services_backend/blob/main/Milestones/Milestone3/Project_Plan.md)** – backend development roadmap and milestones.
+- **[Milestones/Milestone1/01_API_Documentation.md](https://github.com/sweng-plus/res-spw25-health_services_backend/blob/main/Milestones/Milestone1/01_API_Documentation.md)**
+- **[Milestones/Milestone2/01_API_Documentation.md](https://github.com/sweng-plus/res-spw25-health_services_backend/blob/main/Milestones/Milestone2/01_API_Documentation.md)**
+- **[Milestones/Milestone3/01_API_Documentation.md](https://github.com/sweng-plus/res-spw25-health_services_backend/blob/main/Milestones/Milestone3/01_API_Documentation.md)**

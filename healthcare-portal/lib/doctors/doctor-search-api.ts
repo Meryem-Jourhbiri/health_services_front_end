@@ -7,10 +7,14 @@ export type DoctorSearchItem = {
   firstName: string;
   lastName: string;
   specialization: string;
-  languages?: string[];
   experience?: number;
+  education?: string;
+  bio?: string;
+  languages?: string[] | null;
+  clinicAddress?: string;
   averageRating?: number;
-  profilePhotoBase64?: string;
+  reviewCount?: number;
+  profilePhotoBase64?: string | null;
 };
 
 export type DoctorSearchParams = {

@@ -95,18 +95,18 @@ export default function PatientProfilePage() {
   }, [serverProfile, form, medicalHistoryText]);
 
   const validationError = useMemo(() => {
-  if (!form) return null;
+    if (!form) return null;
 
-  const firstName = (form.firstName ?? "").trim();
-  const lastName = (form.lastName ?? "").trim();
-  const dob = (form.dob ?? "").trim();
+    const firstName = (form.firstName ?? "").trim();
+    const lastName = (form.lastName ?? "").trim();
+    const dob = (form.dob ?? "").trim();
 
-  if (!firstName) return "First name is required.";
-  if (!lastName) return "Last name is required.";
-  if (dob && !/^\d{4}-\d{2}-\d{2}$/.test(dob)) return "DOB must be YYYY-MM-DD.";
+    if (!firstName) return "First name is required.";
+    if (!lastName) return "Last name is required.";
+    if (dob && !/^\d{4}-\d{2}-\d{2}$/.test(dob)) return "DOB must be YYYY-MM-DD.";
 
-  return null;
-}, [form]);
+    return null;
+  }, [form]);
 
   function setField<K extends keyof PatientProfile>(
     key: K,

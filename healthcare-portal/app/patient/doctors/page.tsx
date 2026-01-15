@@ -166,25 +166,65 @@ export default function DoctorSearchPage() {
           const fullName = `Dr. ${doc.firstName} ${doc.lastName}`;
           const rating =
             doc.averageRating != null ? doc.averageRating.toFixed(1) : "—";
+          const languages = (doc.languages || [])
+            .filter((lang) => lang && lang.trim())
+            .join(", ");
 
           return (
             <div
               key={doc.id}
-              className="flex items-center justify-between rounded-xl border p-4 hover:bg-content1/50"
+              className="rounded-xl border border-default-200 bg-content1 p-4 hover:bg-content1/80 transition-colors"
             >
-              <div>
-                <p className="font-medium">{fullName}</p>
-                <p className="text-sm text-default-500">
-                  {doc.specialization} · ⭐ {rating}
-                </p>
-              </div>
+              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div className="flex-1">
+                  <p className="font-semibold text-lg">{fullName}</p>
+                  <p className="text-sm text-default-500">
+                    {doc.specialization || "General Practice"}
+                  </p>
+                  
+                  <div className="mt-2 flex flex-wrap gap-2 text-sm text-default-600">
+                    {doc.experience != null && (
+                      <span>📋 {doc.experience} years experience</span>
+                    )}
+                    {rating !== "—" && (
+                      <span>⭐ {rating} ({doc.reviewCount || 0} reviews)</span>
+                    )}
+                  </div>
 
-              <Link
-                href={`/patient/doctors/${doc.id}`}
-                className="text-primary font-medium hover:underline"
-              >
-                View profile
-              </Link>
+                  {languages && (
+                    <p className="mt-2 text-xs text-default-500">
+                      Languages: {languages}
+                    </p>
+                  )}
+                  
+                  {doc.clinicAddress && (
+                    <p className="mt-2 text-xs text-default-500">
+                      📍 {doc.clinicAddress}
+                    </p>
+                  )}
+
+                  {doc.bio && (
+                    <p className="mt-2 text-xs text-default-600 italic">
+                      {doc.bio}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Link
+                    href={`/patient/doctors/${doc.id}?action=book`}
+                    className="inline-block rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 transition-opacity text-center"
+                  >
+                    Book Appointment
+                  </Link>
+                  <Link
+                    href={`/patient/doctors/${doc.id}`}
+                    className="inline-block rounded-lg border border-default-300 px-4 py-2 text-sm font-medium text-foreground hover:bg-default-100 transition-colors text-center"
+                  >
+                    View Profile
+                  </Link>
+                </div>
+              </div>
             </div>
           );
         })}

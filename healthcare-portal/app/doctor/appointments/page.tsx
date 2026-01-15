@@ -32,7 +32,7 @@ const statusOptions: Array<{ value: AppointmentStatus | "ALL"; label: string }> 
   ];
 
 export default function DoctorAppointmentsPage() {
-  const { user, isHydrating } = useAuth();
+  const { user, token, isHydrating } = useAuth();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [filters, setFilters] = useState({
     status: "ALL" as AppointmentStatus | "ALL",
@@ -59,13 +59,16 @@ export default function DoctorAppointmentsPage() {
       setError(null);
 
       try {
-        const appointmentData = await getAppointments({
-          role: "doctor",
-          userId: user.id,
-          status: filters.status,
-          startDate: filters.startDate,
-          endDate: filters.endDate,
-        });
+        const appointmentData = await getAppointments(
+          {
+            role: "doctor",
+            userId: user.id,
+            status: filters.status,
+            startDate: filters.startDate,
+            endDate: filters.endDate,
+          },
+          token,
+        );
         if (!alive) return;
         setAppointments(appointmentData);
       } catch (e) {
@@ -92,16 +95,19 @@ export default function DoctorAppointmentsPage() {
     setError(null);
     setSuccess(null);
     try {
-      await updateAppointmentStatus(appointment.id, { status });
+      await updateAppointmentStatus(appointment.id, { status }, token);
       setSuccess("Appointment status updated.");
       if (user) {
-        const updated = await getAppointments({
-          role: "doctor",
-          userId: user.id,
-          status: filters.status,
-          startDate: filters.startDate,
-          endDate: filters.endDate,
-        });
+        const updated = await getAppointments(
+          {
+            role: "doctor",
+            userId: user.id,
+            status: filters.status,
+            startDate: filters.startDate,
+            endDate: filters.endDate,
+          },
+          token,
+        );
         setAppointments(updated);
       }
     } catch (e) {

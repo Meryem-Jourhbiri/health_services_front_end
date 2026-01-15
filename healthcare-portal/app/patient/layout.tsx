@@ -58,10 +58,9 @@ export default function PatientLayout({ children }: PatientLayoutProps) {
           avatarSrc={avatarSrc}
           userName={user?.name || "Patient"}
           links={[
-            { href: "/", label: "Home" },
-            { href: "/patient", label: "Dashboard" },
+            { href: "/patient", label: "Home" },
             { href: "/patient/appointments", label: "Appointments" },
-            { href: "/patient/doctors", label: "Doctors"},
+            { href: "/patient/doctors", label: "Find a Doctor" },
             { href: "/patient/profile", label: "Profile" },
           ]}
         />

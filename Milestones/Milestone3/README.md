@@ -12,3 +12,17 @@ Milestone 3 delivers the end-to-end care discovery and scheduling experience. It
 - Doctor Availability
 
 ### Milestone 3 Items
+
+- Doctor Search
+  - Search fields
+  - Search results
+  - Patient Booking
+  - Doctor Search Endpoints
+- Appointment Management
+  - Patient View
+  - Doctor View
+  - Appointment Endpoints
+- Review System
+  - Review Submission
+  - Review Management
+  - Review Endpoints
