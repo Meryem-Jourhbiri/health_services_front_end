@@ -3,10 +3,6 @@ import type { CreateReviewRequest, PageReviewDTO, ReviewDTO } from "@/lib/types"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export type Review = ReviewDTO;
-export type CreateReviewPayload = CreateReviewRequest;
-export type ReviewPage = PageReviewDTO;
-
 async function authedRequest<T>(
   path: string,
   token: string | null,
@@ -52,7 +48,7 @@ async function authedRequest<T>(
 
 export async function createReview(
   token: string | null,
-  payload: CreateReviewPayload,
+  payload: CreateReviewRequest,
 ): Promise<ReviewDTO> {
   return authedRequest<ReviewDTO>("/api/reviews", token, {
     method: "POST",
@@ -63,7 +59,7 @@ export async function createReview(
 export async function updateReview(
   token: string | null,
   id: string,
-  payload: CreateReviewPayload,
+  payload: CreateReviewRequest,
 ): Promise<ReviewDTO> {
   return authedRequest<ReviewDTO>(`/api/reviews/${id}`, token, {
     method: "PUT",

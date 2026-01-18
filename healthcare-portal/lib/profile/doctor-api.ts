@@ -4,18 +4,7 @@ import type { DoctorProfileDTO } from "@/lib/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export type DoctorProfile = DoctorProfileDTO;
-
-type BackendDoctorProfile = Omit<
-  DoctorProfileDTO,
-  "phone" | "experience" | "languages"
-> & {
-  phone?: string | null;
-  experience?: number | null;
-  languages?: string[] | null;
-};
-
-function normalizeProfile(profile: BackendDoctorProfile): DoctorProfileDTO {
+function normalizeProfile(profile: DoctorProfileDTO): DoctorProfileDTO {
   return {
     ...profile,
     phone: profile.phone ?? "",
@@ -70,7 +59,7 @@ async function authedRequest<T>(
 export async function getDoctorProfile(
   token: string | null,
 ): Promise<DoctorProfileDTO> {
-  const backend = await authedRequest<BackendDoctorProfile>(
+  const backend = await authedRequest<DoctorProfileDTO>(
     "/api/profile/doctor",
     token,
     { method: "GET" },
@@ -82,7 +71,7 @@ export async function updateDoctorProfile(
   token: string | null,
   payload: DoctorProfileDTO,
 ): Promise<DoctorProfileDTO> {
-  const backend = await authedRequest<BackendDoctorProfile>(
+  const backend = await authedRequest<DoctorProfileDTO>(
     "/api/profile/doctor",
     token,
     {

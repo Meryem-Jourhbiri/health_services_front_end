@@ -9,9 +9,9 @@ import { useAuth } from "@/lib/auth/auth-context";
 import {
   getDoctorProfile,
   updateDoctorProfile,
-  type DoctorProfile,
 } from "@/lib/profile/doctor-api";
 import { ApiError } from "@/lib/auth/api";
+import type { DoctorProfileDTO } from "@/lib/types";
 
 export default function DoctorProfilePage() {
   const { token, isHydrating } = useAuth();
@@ -20,8 +20,10 @@ export default function DoctorProfilePage() {
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  const [serverProfile, setServerProfile] = useState<DoctorProfile | null>(null);
-  const [form, setForm] = useState<DoctorProfile | null>(null);
+  const [serverProfile, setServerProfile] = useState<DoctorProfileDTO | null>(
+    null,
+  );
+  const [form, setForm] = useState<DoctorProfileDTO | null>(null);
   const [languagesText, setLanguagesText] = useState("");
 
   const [error, setError] = useState<string | null>(null);
@@ -96,9 +98,9 @@ export default function DoctorProfilePage() {
     return null;
   }, [form]);
 
-  function setField<K extends keyof DoctorProfile>(
+  function setField<K extends keyof DoctorProfileDTO>(
     key: K,
-    value: DoctorProfile[K],
+    value: DoctorProfileDTO[K],
   ) {
     setError(null);
     setSuccess(null);

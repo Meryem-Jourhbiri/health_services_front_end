@@ -4,18 +4,7 @@ import type { PatientProfileDTO } from "@/lib/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export type PatientProfile = PatientProfileDTO;
-
-type BackendPatientProfile = Omit<
-  PatientProfileDTO,
-  "phone" | "address" | "insuranceInfo"
-> & {
-  phone?: string | null;
-  address?: string | null;
-  insuranceInfo?: string | null;
-};
-
-function normalizeProfile(p: BackendPatientProfile): PatientProfileDTO {
+function normalizeProfile(p: PatientProfileDTO): PatientProfileDTO {
   return {
     ...p,
     phone: p.phone ?? "",
@@ -72,9 +61,13 @@ async function authedRequest<T>(
 export async function getPatientProfile(
   token: string | null,
 ): Promise<PatientProfileDTO> {
-  const backend = await authedRequest<BackendPatientProfile>("/api/profile/patient", token, {
-    method: "GET",
-  });
+  const backend = await authedRequest<PatientProfileDTO>(
+    "/api/profile/patient",
+    token,
+    {
+      method: "GET",
+    },
+  );
   return normalizeProfile(backend);
 }
 
@@ -82,9 +75,13 @@ export async function updatePatientProfile(
   token: string | null,
   payload: PatientProfileDTO,
 ): Promise<PatientProfileDTO> {
-  const backend = await authedRequest<BackendPatientProfile>("/api/profile/patient", token, {
-    method: "PUT",
-    body: JSON.stringify(payload),
-  });
+  const backend = await authedRequest<PatientProfileDTO>(
+    "/api/profile/patient",
+    token,
+    {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    },
+  );
   return normalizeProfile(backend);
 }

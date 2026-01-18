@@ -10,9 +10,9 @@ import { useAuth } from "@/lib/auth/auth-context";
 import {
   getPatientProfile,
   updatePatientProfile,
-  type PatientProfile,
 } from "@/lib/profile/patient-api";
 import { ApiError } from "@/lib/auth/api";
+import type { PatientProfileDTO } from "@/lib/types";
 
 export default function PatientProfilePage() {
   const { token, isHydrating } = useAuth();
@@ -21,10 +21,10 @@ export default function PatientProfilePage() {
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  const [serverProfile, setServerProfile] = useState<PatientProfile | null>(
+  const [serverProfile, setServerProfile] = useState<PatientProfileDTO | null>(
     null,
   );
-  const [form, setForm] = useState<PatientProfile | null>(null);
+  const [form, setForm] = useState<PatientProfileDTO | null>(null);
 
   const [medicalHistoryText, setMedicalHistoryText] = useState<string>("{}");
 
@@ -108,9 +108,9 @@ export default function PatientProfilePage() {
     return null;
   }, [form]);
 
-  function setField<K extends keyof PatientProfile>(
+  function setField<K extends keyof PatientProfileDTO>(
     key: K,
-    value: PatientProfile[K],
+    value: PatientProfileDTO[K],
   ) {
     setError(null);
     setSuccess(null);
