@@ -396,6 +396,17 @@ export default function PatientAppointmentsPage() {
                                 </Button>
                               </>
                             )}
+                          {appointmentStatus === "COMPLETED" &&
+                            appointment.doctorId &&
+                            appointment.id && (
+                              <Link
+                                href={`/patient/doctors/${appointment.doctorId}?review=1&appointmentId=${appointment.id}`}
+                              >
+                                <Button size="sm" variant="flat">
+                                  Leave Review
+                                </Button>
+                              </Link>
+                            )}
                         </div>
                       </TableCell>
                     </TableRow>
