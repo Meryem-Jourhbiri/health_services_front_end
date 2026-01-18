@@ -1,67 +1,20 @@
-import { ApiError } from "@/lib/auth/api";
+import { ApiError, authHeaders } from "@/lib/auth/api";
+import type {
+  AppointmentDTO,
+  AppointmentStatus,
+  BookAppointmentRequest,
+  LocalTime,
+  UserRole,
+} from "@/lib/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export type AppointmentStatus =
-  | "PENDING"
-  | "CONFIRMED"
-  | "COMPLETED"
-  | "CANCELLED";
-
-export type Appointment = {
-  id: string;
-  patientId: string;
-  patientName: string;
-  doctorId: string;
-  doctorName: string;
-  specialty?: string;
-  doctorSpecialization?: string;
-  location?: string;
-  date?: string; // YYYY-MM-DD
-  appointmentDate?: string; // YYYY-MM-DD
-  time?: string; // HH:MM
-  startTime?: string; // HH:MM:SS
-  endTime?: string; // HH:MM:SS
-  reason: string;
-  status: AppointmentStatus;
-  notes?: string | null;
-  rescheduleCount?: number;
-  createdAt?: string;
-  updatedAt?: string;
-};
-
-export type AppointmentApiResponse = {
-  id: string;
-  patientId: string;
-  patientName: string;
-  doctorId: string;
-  doctorName: string;
-  doctorSpecialization?: string;
-  appointmentDate?: string;
-  startTime?: string;
-  endTime?: string;
-  status: AppointmentStatus;
-  reason: string;
-  notes?: string | null;
-  rescheduleCount?: number;
-};
-
 export type AppointmentFilters = {
-  role: "patient" | "doctor";
+  role: UserRole;
   userId: string;
   status?: AppointmentStatus | "ALL";
   startDate?: string;
   endDate?: string;
-};
-
-export type AppointmentPayload = {
-  patientId: string;
-  patientName: string;
-  doctorId: string;
-  date: string;
-  time: string;
-  endTime: string;
-  reason: string;
 };
 
 export type AppointmentReschedulePayload = {
@@ -93,6 +46,37 @@ export type AvailabilitySlot = {
   available: boolean;
 };
 
+type TimeInput = LocalTime | string | null | undefined;
+
+const pad2 = (value: number) => String(value).padStart(2, "0");
+
+function toTimeString(time: TimeInput, includeSeconds = true) {
+  if (!time) return "";
+  if (typeof time === "string") {
+    if (!includeSeconds) return time.slice(0, 5);
+    return time.length === 5 ? `${time}:00` : time;
+  }
+  const hour = time.hour ?? 0;
+  const minute = time.minute ?? 0;
+  const second = time.second ?? 0;
+  const base = `${pad2(hour)}:${pad2(minute)}`;
+  return includeSeconds ? `${base}:${pad2(second)}` : base;
+}
+
+function toLocalTime(value: string): LocalTime {
+  const [hour, minute, second] = value.split(":").map(Number);
+  return {
+    hour: Number.isFinite(hour) ? hour : 0,
+    minute: Number.isFinite(minute) ? minute : 0,
+    second: Number.isFinite(second) ? second : 0,
+    nano: 0,
+  };
+}
+
+function normalizeLocalTime(time: LocalTime | string): LocalTime {
+  return typeof time === "string" ? toLocalTime(time) : time;
+}
+
 // Helper function for API requests
 async function request<T>(
   path: string,
@@ -100,13 +84,14 @@ async function request<T>(
   token?: string | null,
 ): Promise<T> {
   const BASE_URL = API_BASE_URL?.replace(/\/$/, "");
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...(init.headers as Record<string, string>),
-  };
-  
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
+  const headers = new Headers(init.headers);
+  headers.set("Content-Type", "application/json");
+  const auth = authHeaders(token);
+  if (auth) {
+    const authInit = new Headers(auth);
+    authInit.forEach((value, key) => {
+      headers.set(key, value);
+    });
   }
   
   const response = await fetch(`${BASE_URL}${path}`, {
@@ -171,60 +156,57 @@ const timeSlots = [
   "15:30",
 ];
 
-const seedAppointments = (): Appointment[] => {
-  const now = new Date().toISOString();
-  return [
-    {
-      id: "apt-1001",
-      patientId: "patient-mock-123",
-      patientName: "Patient Demo",
-      doctorId: "doctor-mock-123",
-      doctorName: "Dr. Demo",
-      specialty: "Family Medicine",
-      location: "Clinic A - Room 204",
-      date: nextDate(2),
-      time: "09:30",
-      reason: "Routine checkup",
-      status: "CONFIRMED",
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      id: "apt-1002",
-      patientId: "patient-mock-123",
-      patientName: "Patient Demo",
-      doctorId: "doctor-mock-456",
-      doctorName: "Dr. Priya Singh",
-      specialty: "Dermatology",
-      location: "Clinic B - Suite 110",
-      date: nextDate(5),
-      time: "11:00",
-      reason: "Skin consultation",
-      status: "PENDING",
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      id: "apt-1003",
-      patientId: "patient-mock-987",
-      patientName: "Jordan Lee",
-      doctorId: "doctor-mock-123",
-      doctorName: "Dr. Demo",
-      specialty: "Family Medicine",
-      location: "Clinic A - Room 204",
-      date: nextDate(1),
-      time: "10:30",
-      reason: "Follow-up",
-      status: "CONFIRMED",
-      createdAt: now,
-      updatedAt: now,
-    },
-  ];
-};
+const seedAppointments = (): AppointmentDTO[] => [
+  {
+    id: "apt-1001",
+    patientId: "patient-mock-123",
+    patientName: "Patient Demo",
+    doctorId: "doctor-mock-123",
+    doctorName: "Dr. Demo",
+    doctorSpecialization: "Family Medicine",
+    appointmentDate: nextDate(2),
+    startTime: toLocalTime("09:30:00"),
+    endTime: toLocalTime("10:00:00"),
+    reason: "Routine checkup",
+    status: "CONFIRMED",
+    notes: "",
+    rescheduleCount: 0,
+  },
+  {
+    id: "apt-1002",
+    patientId: "patient-mock-123",
+    patientName: "Patient Demo",
+    doctorId: "doctor-mock-456",
+    doctorName: "Dr. Priya Singh",
+    doctorSpecialization: "Dermatology",
+    appointmentDate: nextDate(5),
+    startTime: toLocalTime("11:00:00"),
+    endTime: toLocalTime("11:30:00"),
+    reason: "Skin consultation",
+    status: "PENDING",
+    notes: "",
+    rescheduleCount: 0,
+  },
+  {
+    id: "apt-1003",
+    patientId: "patient-mock-987",
+    patientName: "Jordan Lee",
+    doctorId: "doctor-mock-123",
+    doctorName: "Dr. Demo",
+    doctorSpecialization: "Family Medicine",
+    appointmentDate: nextDate(1),
+    startTime: toLocalTime("10:30:00"),
+    endTime: toLocalTime("11:00:00"),
+    reason: "Follow-up",
+    status: "CONFIRMED",
+    notes: "",
+    rescheduleCount: 0,
+  },
+];
 
 const wait = (ms = 400) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const getStore = (): Appointment[] => {
+const getStore = (): AppointmentDTO[] => {
   if (typeof window === "undefined") {
     return [];
   }
@@ -232,7 +214,7 @@ const getStore = (): Appointment[] => {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      return JSON.parse(raw) as Appointment[];
+      return JSON.parse(raw) as AppointmentDTO[];
     }
   } catch {
     // ignore parsing errors
@@ -243,7 +225,7 @@ const getStore = (): Appointment[] => {
   return seeded;
 };
 
-const saveStore = (appointments: Appointment[]) => {
+const saveStore = (appointments: AppointmentDTO[]) => {
   if (typeof window === "undefined") {
     return;
   }
@@ -260,34 +242,6 @@ function nextDate(daysFromNow: number) {
   return date.toISOString().slice(0, 10);
 }
 
-function normalizeAppointment(
-  appointment: Appointment | AppointmentApiResponse,
-): Appointment {
-  const appointmentDate =
-    "appointmentDate" in appointment
-      ? appointment.appointmentDate
-      : appointment.date;
-  const startTime =
-    "startTime" in appointment ? appointment.startTime : appointment.time;
-  const endTime =
-    "endTime" in appointment ? appointment.endTime : appointment.endTime;
-  const specialty =
-    "doctorSpecialization" in appointment
-      ? appointment.doctorSpecialization
-      : appointment.specialty;
-
-  return {
-    ...appointment,
-    appointmentDate: appointmentDate ?? appointment.appointmentDate ?? "",
-    startTime: startTime ?? appointment.startTime ?? "",
-    endTime: endTime ?? appointment.endTime ?? "",
-    doctorSpecialization: specialty ?? appointment.doctorSpecialization ?? "",
-    date: appointmentDate ?? appointment.date ?? "",
-    time: startTime ? startTime.slice(0, 5) : appointment.time ?? "",
-    specialty: specialty ?? appointment.specialty ?? "",
-  };
-}
-
 function addMinutes(time: string, minutes: number) {
   const [hours, mins] = time.split(":").map(Number);
   if (Number.isNaN(hours) || Number.isNaN(mins)) return time;
@@ -296,30 +250,28 @@ function addMinutes(time: string, minutes: number) {
   return date.toTimeString().slice(0, 5);
 }
 
-function assertBookingFields(payload: AppointmentPayload) {
-  if (!payload.patientId || !payload.patientName) {
-    throw new ApiError("Patient information is missing.");
-  }
+function assertBookingFields(payload: BookAppointmentRequest) {
   if (!payload.doctorId) {
     throw new ApiError("Doctor selection is required.");
   }
-  if (!payload.date || !payload.time || !payload.endTime) {
+  if (!payload.appointmentDate || !payload.startTime || !payload.endTime) {
     throw new ApiError("Date, start time, and end time are required.");
   }
 }
 
 function checkDoubleBooking(
-  appointments: Appointment[],
+  appointments: AppointmentDTO[],
   doctorId: string,
   date: string,
   time: string,
   ignoreId?: string,
 ) {
+  const normalizedTime = toTimeString(time, false);
   const conflict = appointments.find(
     (apt) =>
       apt.doctorId === doctorId &&
-      apt.date === date &&
-      apt.time === time &&
+      (apt.appointmentDate ?? "") === date &&
+      toTimeString(apt.startTime, false) === normalizedTime &&
       apt.status !== "CANCELLED" &&
       apt.id !== ignoreId,
   );
@@ -328,35 +280,38 @@ function checkDoubleBooking(
   }
 }
 
-function applyFilters(appointments: Appointment[], filters: AppointmentFilters) {
+function applyFilters(appointments: AppointmentDTO[], filters: AppointmentFilters) {
   const scoped =
-    filters.role === "patient"
+    filters.role === "PATIENT"
       ? appointments.filter((apt) => apt.patientId === filters.userId)
       : appointments.filter((apt) => apt.doctorId === filters.userId);
 
   return scoped
     .filter((apt) => {
+      const appointmentDate = apt.appointmentDate ?? "";
+      if (!appointmentDate) return false;
       if (filters.status && filters.status !== "ALL") {
-        return apt.status === filters.status;
+        if (apt.status !== filters.status) return false;
       }
-      return true;
-    })
-    .filter((apt) => {
-      if (filters.startDate && apt.date < filters.startDate) return false;
-      if (filters.endDate && apt.date > filters.endDate) return false;
+      if (filters.startDate && appointmentDate < filters.startDate) {
+        return false;
+      }
+      if (filters.endDate && appointmentDate > filters.endDate) return false;
       return true;
     })
     .sort((a, b) => {
-      const dateCompare = a.date.localeCompare(b.date);
+      const dateCompare = (a.appointmentDate ?? "").localeCompare(
+        b.appointmentDate ?? "",
+      );
       if (dateCompare !== 0) return dateCompare;
-      return a.time.localeCompare(b.time);
+      return toTimeString(a.startTime).localeCompare(toTimeString(b.startTime));
     });
 }
 
 export async function getAppointments(
   filters: AppointmentFilters,
   token?: string | null,
-): Promise<Appointment[]> {
+): Promise<AppointmentDTO[]> {
   // Real API mode
   if (API_BASE_URL && token) {
     const params = new URLSearchParams();
@@ -371,32 +326,26 @@ export async function getAppointments(
     }
     const queryString = params.toString();
     const path = `/api/appointments${queryString ? `?${queryString}` : ""}`;
-    const data = await request<AppointmentApiResponse[]>(
-      path,
-      { method: "GET" },
-      token,
-    );
-    return data.map(normalizeAppointment);
+    return request<AppointmentDTO[]>(path, { method: "GET" }, token);
   }
 
   // Mock mode
   await wait();
   const appointments = getStore();
-  return applyFilters(appointments, filters).map(normalizeAppointment);
+  return applyFilters(appointments, filters);
 }
 
 export async function getAppointmentById(
   id: string,
   token?: string | null,
-): Promise<Appointment> {
+): Promise<AppointmentDTO> {
   // Real API mode
   if (API_BASE_URL && token) {
-    const data = await request<AppointmentApiResponse>(
+    return request<AppointmentDTO>(
       `/api/appointments/${id}`,
       { method: "GET" },
       token,
     );
-    return normalizeAppointment(data);
   }
 
   // Mock mode
@@ -406,31 +355,24 @@ export async function getAppointmentById(
   if (!appointment) {
     throw new ApiError("Appointment not found.", 404);
   }
-  return normalizeAppointment(appointment);
+  return appointment;
 }
 
 export async function bookAppointment(
-  payload: AppointmentPayload,
+  payload: BookAppointmentRequest,
   token?: string | null,
-): Promise<Appointment> {
+  patient?: { id: string; name: string },
+): Promise<AppointmentDTO> {
   assertBookingFields(payload);
 
   // Real API mode
   if (API_BASE_URL && token) {
-    const startTime =
-      payload.time.length === 5 ? `${payload.time}:00` : payload.time;
-    const endTime =
-      payload.endTime.length === 5 ? `${payload.endTime}:00` : payload.endTime;
     const apiPayload = {
-      patientId: payload.patientId,
-      patientName: payload.patientName,
-      doctorId: payload.doctorId,
-      appointmentDate: payload.date,
-      startTime,
-      endTime,
-      reason: payload.reason,
+      ...payload,
+      startTime: toTimeString(payload.startTime),
+      endTime: toTimeString(payload.endTime),
     };
-    const data = await request<AppointmentApiResponse>(
+    const data = await request<AppointmentDTO>(
       "/api/appointments",
       {
         method: "POST",
@@ -438,10 +380,13 @@ export async function bookAppointment(
       },
       token,
     );
-    return normalizeAppointment(data);
+    return data;
   }
 
   // Mock mode
+  if (!patient?.id || !patient.name) {
+    throw new ApiError("Patient information is missing.");
+  }
   await wait();
   const appointments = getStore();
   const doctor = mockDoctors.find((item) => item.id === payload.doctorId);
@@ -449,27 +394,28 @@ export async function bookAppointment(
     throw new ApiError("Selected doctor is unavailable.");
   }
 
-  checkDoubleBooking(appointments, payload.doctorId, payload.date, payload.time);
+  const startLabel = toTimeString(payload.startTime, false);
+  checkDoubleBooking(
+    appointments,
+    payload.doctorId,
+    payload.appointmentDate,
+    startLabel,
+  );
 
-  const now = new Date().toISOString();
-  const appointment: Appointment = {
+  const appointment: AppointmentDTO = {
     id: generateId(),
-    patientId: payload.patientId,
-    patientName: payload.patientName,
+    patientId: patient.id,
+    patientName: patient.name,
     doctorId: doctor.id,
     doctorName: doctor.name,
-    specialty: doctor.specialty,
     doctorSpecialization: doctor.specialty,
-    location: doctor.location,
-    date: payload.date,
-    appointmentDate: payload.date,
-    time: payload.time,
-    startTime: payload.time,
-    endTime: payload.endTime,
+    appointmentDate: payload.appointmentDate,
+    startTime: normalizeLocalTime(payload.startTime),
+    endTime: normalizeLocalTime(payload.endTime),
     reason: payload.reason || "General consultation",
     status: "PENDING",
-    createdAt: now,
-    updatedAt: now,
+    notes: "",
+    rescheduleCount: 0,
   };
 
   appointments.push(appointment);
@@ -480,15 +426,14 @@ export async function bookAppointment(
 export async function cancelAppointment(
   id: string,
   token?: string | null,
-): Promise<Appointment> {
+): Promise<AppointmentDTO> {
   // Real API mode
   if (API_BASE_URL && token) {
-    const data = await request<AppointmentApiResponse>(
+    return request<AppointmentDTO>(
       `/api/appointments/${id}/cancel`,
       { method: "PUT" },
       token,
     );
-    return normalizeAppointment(data);
   }
 
   // Mock mode
@@ -501,24 +446,24 @@ export async function cancelAppointment(
   appointments[index] = {
     ...appointments[index],
     status: "CANCELLED",
-    updatedAt: new Date().toISOString(),
+    // updatedAt: new Date().toISOString(),
   };
   saveStore(appointments);
-  return normalizeAppointment(appointments[index]);
+  return appointments[index];
 }
 
 export async function rescheduleAppointment(
   id: string,
   payload: AppointmentReschedulePayload,
   token?: string | null,
-): Promise<Appointment> {
+): Promise<AppointmentDTO> {
   if (!payload.date || !payload.time) {
     throw new ApiError("New date and time are required.");
   }
 
   // Real API mode
   if (API_BASE_URL && token) {
-    const data = await request<AppointmentApiResponse>(
+    return request<AppointmentDTO>(
       `/api/appointments/${id}/reschedule`,
       {
         method: "PUT",
@@ -526,7 +471,6 @@ export async function rescheduleAppointment(
       },
       token,
     );
-    return normalizeAppointment(data);
   }
 
   // Mock mode
@@ -538,6 +482,9 @@ export async function rescheduleAppointment(
   }
 
   const current = appointments[index];
+  if (!current.doctorId) {
+    throw new ApiError("Doctor information is missing.", 400);
+  }
   checkDoubleBooking(
     appointments,
     current.doctorId,
@@ -546,29 +493,37 @@ export async function rescheduleAppointment(
     id,
   );
 
+  const startTime = toLocalTime(payload.time);
+  const endTime = toLocalTime(addMinutes(payload.time, 30));
+
   appointments[index] = {
     ...current,
-    date: payload.date,
-    time: payload.time,
+    appointmentDate: payload.date,
+    startTime,
+    endTime,
     status: "PENDING",
-    updatedAt: new Date().toISOString(),
   };
   saveStore(appointments);
-  return normalizeAppointment(appointments[index]);
+  return appointments[index];
 }
 
 export async function updateAppointmentStatus(
   id: string,
   payload: AppointmentStatusPayload,
+  // payload: AppointmentStatus,
   token?: string | null,
-): Promise<Appointment> {
+): Promise<AppointmentDTO> {
+  if (!payload?.status) {
+    throw new ApiError("Appointment status is required.");
+  }
+
   // Real API mode
   if (API_BASE_URL && token) {
-    return request<Appointment>(
-      `/api/appointments/${id}/status`,
+    const query = new URLSearchParams({ status: payload.status }).toString();
+    return request<AppointmentDTO>(
+      `/api/appointments/${id}/status?${query}`,
       {
         method: "PUT",
-        body: JSON.stringify(payload),
       },
       token,
     );
@@ -584,7 +539,6 @@ export async function updateAppointmentStatus(
   appointments[index] = {
     ...appointments[index],
     status: payload.status,
-    updatedAt: new Date().toISOString(),
   };
   saveStore(appointments);
   return appointments[index];
@@ -634,8 +588,8 @@ export async function getAvailableSlots(
     available: !appointments.some(
       (apt) =>
         apt.doctorId === doctorId &&
-        apt.date === date &&
-        apt.time === slot &&
+        (apt.appointmentDate ?? "") === date &&
+        toTimeString(apt.startTime, false) === slot &&
         apt.status !== "CANCELLED",
     ),
   }));

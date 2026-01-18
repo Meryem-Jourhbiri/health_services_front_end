@@ -18,9 +18,17 @@ import { ApiError } from "@/lib/auth/api";
 import {
   getAppointments,
   updateAppointmentStatus,
-  type Appointment,
-  type AppointmentStatus,
 } from "@/lib/appointments/appointments-api";
+import type { AppointmentDTO, AppointmentStatus, LocalTime } from "@/lib/types";
+
+const STATUS_VALUES = ["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"] as const;
+
+function toAppointmentStatus(value: string): AppointmentStatus | null {
+  const upper = value.toUpperCase();
+  return (STATUS_VALUES as readonly string[]).includes(upper)
+    ? (upper as AppointmentStatus)
+    : null;
+}
 
 const statusOptions: Array<{ value: AppointmentStatus | "ALL"; label: string }> =
   [
@@ -33,7 +41,7 @@ const statusOptions: Array<{ value: AppointmentStatus | "ALL"; label: string }> 
 
 export default function DoctorAppointmentsPage() {
   const { user, token, isHydrating } = useAuth();
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [appointments, setAppointments] = useState<AppointmentDTO[]>([]);
   const [filters, setFilters] = useState({
     status: "ALL" as AppointmentStatus | "ALL",
     startDate: "",
@@ -61,7 +69,7 @@ export default function DoctorAppointmentsPage() {
       try {
         const appointmentData = await getAppointments(
           {
-            role: "doctor",
+            role: "DOCTOR",
             userId: user.id,
             status: filters.status,
             startDate: filters.startDate,
@@ -88,19 +96,30 @@ export default function DoctorAppointmentsPage() {
   }, [filters, user, isHydrating]);
 
   async function handleStatusUpdate(
-    appointment: Appointment,
+    appointment: AppointmentDTO,
     status: AppointmentStatus,
   ) {
     setSubmitting(true);
     setError(null);
     setSuccess(null);
     try {
-      await updateAppointmentStatus(appointment.id, { status }, token);
+      if (!appointment.id) {
+        throw new Error("Appointment ID is required.");
+      }
+      const normalizedStatus = toAppointmentStatus(status);
+      if (!normalizedStatus) {
+        throw new Error("Appointment status is required.");
+      }
+      await updateAppointmentStatus(
+        appointment.id,
+        { status: normalizedStatus },
+        token,
+      );
       setSuccess("Appointment status updated.");
       if (user) {
         const updated = await getAppointments(
           {
-            role: "doctor",
+            role: "DOCTOR",
             userId: user.id,
             status: filters.status,
             startDate: filters.startDate,
@@ -248,53 +267,65 @@ export default function DoctorAppointmentsPage() {
                 <TableColumn align="end">Update</TableColumn>
               </TableHeader>
               <TableBody items={appointments}>
-                {(appointment) => (
-                  <TableRow key={appointment.id}>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-medium">
-                          {appointment.patientName}
-                        </span>
-                        <span className="text-xs text-default-500">
-                          {appointment.id}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col text-sm">
-                        <span>{appointment.date}</span>
-                        <span className="text-xs text-default-500">
-                          {appointment.time}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{appointment.reason}</TableCell>
-                    <TableCell>
-                      <StatusChip status={appointment.status} />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <select
-                        value={appointment.status}
-                        onChange={(event) =>
-                          handleStatusUpdate(
-                            appointment,
-                            event.target.value as AppointmentStatus,
-                          )
-                        }
-                        className="rounded-large border border-default-200 bg-content1 px-2 py-1 text-xs text-foreground outline-none focus:border-primary"
-                        disabled={submitting}
-                      >
-                        {statusOptions
-                          .filter((option) => option.value !== "ALL")
-                          .map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                      </select>
-                    </TableCell>
-                  </TableRow>
-                )}
+                {(appointment) => {
+                  const appointmentStatus = appointment.status ?? "PENDING";
+                  const appointmentKey =
+                    appointment.id ??
+                    `${appointment.patientId ?? "apt"}-${
+                      appointment.appointmentDate ?? "date"
+                    }`;
+                  return (
+                    <TableRow key={appointmentKey}>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium">
+                            {appointment.patientName ?? "—"}
+                          </span>
+                          <span className="text-xs text-default-500">
+                            {appointment.id ?? "—"}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col text-sm">
+                          <span>{appointment.appointmentDate ?? "—"}</span>
+                          <span className="text-xs text-default-500">
+                            {formatTimeRange(
+                              appointment.startTime,
+                              appointment.endTime,
+                            )}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{appointment.reason ?? "—"}</TableCell>
+                      <TableCell>
+                        <StatusChip status={appointmentStatus} />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <select
+                          value={appointmentStatus}
+                          onChange={(event) =>
+                            handleStatusUpdate(
+                              appointment,
+                              (toAppointmentStatus(event.target.value) ??
+                                appointmentStatus) as AppointmentStatus,
+                            )
+                          }
+                          className="rounded-large border border-default-200 bg-content1 px-2 py-1 text-xs text-foreground outline-none focus:border-primary"
+                          disabled={submitting || !appointment.id}
+                        >
+                          {statusOptions
+                            .filter((option) => option.value !== "ALL")
+                            .map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                        </select>
+                      </TableCell>
+                    </TableRow>
+                  );
+                }}
               </TableBody>
             </Table>
           )}
@@ -313,6 +344,24 @@ function SummaryStat({ label, value }: { label: string; value: string }) {
       <p className="text-lg font-semibold">{value}</p>
     </div>
   );
+}
+
+function formatLocalTime(time?: LocalTime | string) {
+  if (!time) return "";
+  if (typeof time === "string") {
+    return time.slice(0, 5);
+  }
+  const hour = time.hour ?? 0;
+  const minute = time.minute ?? 0;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+function formatTimeRange(start?: LocalTime | string, end?: LocalTime | string) {
+  const startLabel = formatLocalTime(start);
+  if (!startLabel) return "";
+  const endLabel = formatLocalTime(end);
+  if (!endLabel) return startLabel;
+  return `${startLabel} - ${endLabel}`;
 }
 
 function StatusChip({ status }: { status: AppointmentStatus }) {

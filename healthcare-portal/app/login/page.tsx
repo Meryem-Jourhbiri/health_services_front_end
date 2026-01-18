@@ -5,10 +5,11 @@ import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Input } from "@heroui/input";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
+import AuthPageSkeleton from "@/components/auth/AuthPageSkeleton";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get("next");
@@ -42,9 +43,9 @@ export default function LoginPage() {
     try {
       const user = await login(formValues);
       const fallback =
-        user.role === "doctor"
+        user.role === "DOCTOR"
           ? "/doctor"
-          : user.role === "patient"
+          : user.role === "PATIENT"
             ? "/patient"
             : "/";
       router.replace(redirectPath || fallback);
@@ -121,5 +122,15 @@ export default function LoginPage() {
         </CardBody>
       </Card>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={<AuthPageSkeleton />}
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

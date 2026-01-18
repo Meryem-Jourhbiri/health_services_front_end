@@ -5,10 +5,11 @@ import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Input } from "@heroui/input";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
+import AuthPageSkeleton from "@/components/auth/AuthPageSkeleton";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const presetToken = searchParams.get("token") ?? "";
@@ -128,5 +129,15 @@ export default function ResetPasswordPage() {
         </CardBody>
       </Card>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={<AuthPageSkeleton />}
+    >
+      <ResetPasswordForm />
+    </Suspense>
   );
 }

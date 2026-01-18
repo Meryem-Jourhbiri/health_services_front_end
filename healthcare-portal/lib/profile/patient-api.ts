@@ -1,33 +1,28 @@
 // lib/profile/patient-api.ts
-import { ApiError } from "@/lib/auth/api";
+import { ApiError, authHeaders } from "@/lib/auth/api";
+import type { PatientProfileDTO } from "@/lib/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export type PatientProfile = {
-  firstName: string;
-  lastName: string;
-  dob: string; // YYYY-MM-DD
-  phone: string;
-  address: string;
-  gender: string;
-  insuranceInfo: string;
-  medicalHistory: Record<string, unknown>;
-  profilePhotoBase64?: string;
+export type PatientProfile = PatientProfileDTO;
+
+type BackendPatientProfile = Omit<
+  PatientProfileDTO,
+  "phone" | "address" | "insuranceInfo"
+> & {
+  phone?: string | null;
+  address?: string | null;
+  insuranceInfo?: string | null;
 };
 
-type BackendPatientProfile = Omit<PatientProfile, "phone" | "address" | "insuranceInfo"> & {
-  phone: string | null;
-  address: string | null;
-  insuranceInfo: string | null;
-};
-
-function normalizeProfile(p: BackendPatientProfile): PatientProfile {
+function normalizeProfile(p: BackendPatientProfile): PatientProfileDTO {
   return {
     ...p,
     phone: p.phone ?? "",
     address: p.address ?? "",
     insuranceInfo: p.insuranceInfo ?? "",
-    medicalHistory: (p.medicalHistory ?? {}) as Record<string, unknown>,
+    medicalHistory:
+      (p.medicalHistory ?? {}) as Record<string, Record<string, unknown>>,
   };
 }
 
@@ -44,7 +39,7 @@ async function authedRequest<T>(
     ...init,
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(authHeaders(token) || {}),
       ...(init.headers || {}),
     },
   });
@@ -74,7 +69,9 @@ async function authedRequest<T>(
   return (await res.json()) as T;
 }
 
-export async function getPatientProfile(token: string | null): Promise<PatientProfile> {
+export async function getPatientProfile(
+  token: string | null,
+): Promise<PatientProfileDTO> {
   const backend = await authedRequest<BackendPatientProfile>("/api/profile/patient", token, {
     method: "GET",
   });
@@ -83,12 +80,11 @@ export async function getPatientProfile(token: string | null): Promise<PatientPr
 
 export async function updatePatientProfile(
   token: string | null,
-  payload: PatientProfile,
-): Promise<PatientProfile> {
+  payload: PatientProfileDTO,
+): Promise<PatientProfileDTO> {
   const backend = await authedRequest<BackendPatientProfile>("/api/profile/patient", token, {
     method: "PUT",
     body: JSON.stringify(payload),
   });
   return normalizeProfile(backend);
 }
-

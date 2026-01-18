@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
-import type { UserRole } from "@/lib/auth/types";
+import type { UserRole } from "@/lib/types";
 
 type ProtectedRouteProps = {
   allowRoles?: UserRole[];
@@ -43,7 +43,7 @@ export function ProtectedRoute({
 
     if (!isAllowed) {
       const fallback =
-        role === "doctor" ? "/doctor" : role === "patient" ? "/patient" : "/";
+        role === "DOCTOR" ? "/doctor" : role === "PATIENT" ? "/patient" : "/";
       router.replace(fallback);
     }
   }, [isHydrating, isAuthenticated, isAllowed, router, role]);

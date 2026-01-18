@@ -26,8 +26,8 @@ import type {
   LoginPayload,
   RegisterPayload,
   ResetPasswordPayload,
-  UserRole,
 } from "./types";
+import type { UserRole } from "@/lib/types";
 
 type AuthState = {
   token: string | null;

@@ -1,4 +1,4 @@
-export type UserRole = "patient" | "doctor" | "admin";
+import type { LoginRequest, RegisterRequest, UserRole } from "@/lib/types";
 
 export type AuthUser = {
   id: string;
@@ -8,25 +8,9 @@ export type AuthUser = {
   emailVerified: boolean;
 };
 
-export type LoginPayload = {
-  email: string;
-  password: string;
-};
+export type LoginPayload = LoginRequest;
 
-export type RegisterPayload = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  phone: string;
-  gender: string;
-  dob: string; // YYYY-MM-DD
-  role: UserRole;
-  // Doctor-specific fields (optional for now)
-  licenseNumber?: string;
-  specialization?: string;
-  experience?: number;
-};
+export type RegisterPayload = RegisterRequest;
 
 export type ForgotPasswordPayload = {
   email: string;

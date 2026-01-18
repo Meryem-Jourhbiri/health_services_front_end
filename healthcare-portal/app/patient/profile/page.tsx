@@ -154,9 +154,12 @@ export default function PatientProfilePage() {
     if (!form) return;
     if (validationError) return;
 
-    let parsedMedicalHistory: Record<string, unknown> = {};
+    let parsedMedicalHistory: Record<string, Record<string, unknown>> = {};
     try {
-      parsedMedicalHistory = JSON.parse(medicalHistoryText || "{}");
+      parsedMedicalHistory = JSON.parse(medicalHistoryText || "{}") as Record<
+        string,
+        Record<string, unknown>
+      >;
     } catch {
       setError("Medical history must be valid JSON.");
       return;

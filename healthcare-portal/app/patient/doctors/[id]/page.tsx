@@ -8,6 +8,7 @@ import { Button } from "@heroui/button";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { useAuth } from "@/lib/auth/auth-context";
 import { ApiError } from "@/lib/auth/api";
+import type { BookAppointmentRequest, DoctorPublicProfileDTO, LocalTime } from "@/lib/types";
 import { getDoctorDetails } from "@/lib/doctors/doctor-search-api";
 import {
   bookAppointment,
@@ -25,7 +26,7 @@ export default function DoctorDetailPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [doctor, setDoctor] = useState<any>(null);
+  const [doctor, setDoctor] = useState<DoctorPublicProfileDTO | null>(null);
 
   // Booking state
   const [showBooking, setShowBooking] = useState(shouldBook);
@@ -154,17 +155,26 @@ export default function DoctorDetailPage() {
     setBookingSuccess(null);
 
     try {
+      const toLocalTime = (value: string): LocalTime => {
+        const [hour, minute, second] = value.split(":").map(Number);
+        return {
+          hour: Number.isFinite(hour) ? hour : 0,
+          minute: Number.isFinite(minute) ? minute : 0,
+          second: Number.isFinite(second) ? second : 0,
+          nano: 0,
+        };
+      };
+      const payload: BookAppointmentRequest = {
+        appointmentDate: bookingDate,
+        doctorId: id,
+        startTime: toLocalTime(bookingTime),
+        endTime: toLocalTime(bookingEndTime),
+        reason: reason || "General consultation",
+      };
       await bookAppointment(
-        {
-          patientId: user.id,
-          patientName: user.name,
-          doctorId: id,
-          date: bookingDate,
-          time: bookingTime,
-          endTime: bookingEndTime,
-          reason: reason || "General consultation",
-        },
+        payload,
         token,
+        { id: user.id, name: user.name },
       );
       setBookingSuccess("Appointment booked successfully! Check your appointments page.");
       setBookingDate("");
@@ -182,25 +192,23 @@ export default function DoctorDetailPage() {
     }
   };
 
-  const name =
-    doctor?.name ??
-    (doctor?.firstName && doctor?.lastName
-      ? `Dr. ${doctor.firstName} ${doctor.lastName}`
-      : "Doctor");
+  const name = doctor
+    ? `Dr. ${doctor.firstName ?? ""} ${doctor.lastName ?? ""}`.trim()
+    : "Doctor";
 
   const specialization = doctor?.specialization ?? "—";
   const rating =
     doctor?.averageRating != null ? Number(doctor.averageRating).toFixed(1) : "—";
-  const bio = doctor?.bio ?? doctor?.about ?? null;
+  const bio = doctor?.bio ?? null;
 
   const clinicAddress = doctor?.clinicAddress ?? null;
   const education = doctor?.education ?? null;
   const experience = doctor?.experience != null ? String(doctor.experience) : null;
   const reviewCount = doctor?.reviewCount != null ? String(doctor.reviewCount) : "0";
 
-  const languages = Array.isArray(doctor?.languages)
-    ? doctor.languages.filter((l: string) => l && l.trim()).join(", ")
-    : null;
+  const languages = doctor?.languages
+    ?.filter((language) => language && language.trim())
+    .join(", ");
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-6">
