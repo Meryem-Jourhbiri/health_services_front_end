@@ -1,37 +1,7 @@
-import { ApiError } from "@/lib/auth/api";
+import { ApiError, authHeaders } from "@/lib/auth/api";
+import type { CreateReviewRequest, PageReviewDTO, ReviewDTO } from "@/lib/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-export type Review = {
-  id: string;
-  appointmentId: string;
-  patientId: string;
-  patientName: string;
-  doctorId: string;
-  doctorName: string;
-  rating: number;
-  comment?: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type CreateReviewPayload = {
-  appointmentId: string;
-  rating: number;
-  comment?: string;
-};
-
-export type ReviewPage = {
-  content: Review[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
-  numberOfElements: number;
-  first: boolean;
-  last: boolean;
-  empty: boolean;
-};
 
 async function authedRequest<T>(
   path: string,
@@ -46,7 +16,7 @@ async function authedRequest<T>(
     ...init,
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(authHeaders(token) || {}),
       ...(init.headers || {}),
     },
   });
@@ -78,9 +48,9 @@ async function authedRequest<T>(
 
 export async function createReview(
   token: string | null,
-  payload: CreateReviewPayload,
-): Promise<Review> {
-  return authedRequest<Review>("/api/reviews", token, {
+  payload: CreateReviewRequest,
+): Promise<ReviewDTO> {
+  return authedRequest<ReviewDTO>("/api/reviews", token, {
     method: "POST",
     body: JSON.stringify(payload),
   });
@@ -89,9 +59,9 @@ export async function createReview(
 export async function updateReview(
   token: string | null,
   id: string,
-  payload: CreateReviewPayload,
-): Promise<Review> {
-  return authedRequest<Review>(`/api/reviews/${id}`, token, {
+  payload: CreateReviewRequest,
+): Promise<ReviewDTO> {
+  return authedRequest<ReviewDTO>(`/api/reviews/${id}`, token, {
     method: "PUT",
     body: JSON.stringify(payload),
   });
@@ -113,13 +83,13 @@ export async function getReviewsByDoctor(
   doctorId: string,
   page = 0,
   size = 10,
-): Promise<ReviewPage> {
+): Promise<PageReviewDTO> {
   const query = new URLSearchParams({
     page: String(page),
     size: String(size),
   }).toString();
 
-  return authedRequest<ReviewPage>(
+  return authedRequest<PageReviewDTO>(
     `/api/reviews/doctor/${doctorId}?${query}`,
     token,
     { method: "GET" },

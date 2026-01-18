@@ -15,11 +15,11 @@ import {
   updateAvailability,
   type AvailabilityPayload,
   type AvailabilitySchedule,
-  type DayOfWeek,
   type UnavailabilityPayload,
   type UnavailabilityPeriod,
 } from "@/lib/availability/availability-api";
 import { ApiError } from "@/lib/auth/api";
+import type { DayOfWeek } from "@/lib/types";
 
 const DAYS: DayOfWeek[] = [
   "MONDAY",

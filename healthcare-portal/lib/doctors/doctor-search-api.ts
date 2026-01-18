@@ -1,21 +1,9 @@
-import { ApiError } from "@/lib/auth/api";
+import { ApiError, authHeaders } from "@/lib/auth/api";
+import type { DoctorPublicProfileDTO, DoctorSearchResponse } from "@/lib/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export type DoctorSearchItem = {
-  id: string;
-  firstName: string;
-  lastName: string;
-  specialization: string;
-  experience?: number;
-  education?: string;
-  bio?: string;
-  languages?: string[] | null;
-  clinicAddress?: string;
-  averageRating?: number;
-  reviewCount?: number;
-  profilePhotoBase64?: string | null;
-};
+export type DoctorSearchItem = DoctorPublicProfileDTO;
 
 export type DoctorSearchParams = {
   name?: string;
@@ -28,13 +16,7 @@ export type DoctorSearchParams = {
   size?: number; // swagger says "size" (not pageSize)
 };
 
-type DoctorSearchResponse = {
-  doctors: DoctorSearchItem[];
-  currentPage?: number;
-  totalPages?: number;
-  pageSize?: number;
-  totalCount?: number;
-};
+type DoctorSearchResponseDTO = DoctorSearchResponse;
 
 async function authedRequest<T>(
   path: string,
@@ -49,7 +31,7 @@ async function authedRequest<T>(
     ...init,
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(authHeaders(token) || {}),
       ...(init.headers || {}),
     },
   });
@@ -107,7 +89,7 @@ export async function searchDoctors(
 ): Promise<DoctorSearchItem[]> {
   const query = buildQuery(params);
 
-  const res = await authedRequest<DoctorSearchResponse>(
+  const res = await authedRequest<DoctorSearchResponseDTO>(
     `/api/doctors/search${query}`,
     token,
     { method: "GET" },
@@ -116,11 +98,16 @@ export async function searchDoctors(
   return res?.doctors ?? [];
 }
 
-export async function getDoctorDetails(token: string | null, id: string) {
+export async function getDoctorDetails(
+  token: string | null,
+  id: string,
+): Promise<DoctorPublicProfileDTO> {
   const safeId = encodeURIComponent(id);
-  const res = await authedRequest<any>(`/api/doctors/${safeId}`, token, {
-    method: "GET",
-  });
+  const res = await authedRequest<DoctorPublicProfileDTO>(
+    `/api/doctors/${safeId}`,
+    token,
+    { method: "GET" },
+  );
 
-  return res?.data ?? res;
+  return res;
 }

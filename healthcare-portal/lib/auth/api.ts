@@ -8,8 +8,8 @@ import type {
   LoginResponse,
   RegisterPayload,
   ResetPasswordPayload,
-  UserRole,
 } from "./types";
+import type { UserRole } from "@/lib/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -26,16 +26,17 @@ export class ApiError extends Error {
 const wait = (ms = 800) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const inferRoleFromEmail = (email: string): UserRole =>
-  email.toLowerCase().includes("doctor") ? "doctor" : "patient";
+  email.toLowerCase().includes("doctor") ? "DOCTOR" : "PATIENT";
 
 const mockUser = (email: string): AuthUser => {
   const role = inferRoleFromEmail(email);
+  const roleSlug = role.toLowerCase();
   return {
-    id: `${role}-mock-123`,
-    name: role === "doctor" ? "Dr. Demo" : "Patient Demo",
+    id: `${roleSlug}-mock-123`,
+    name: role === "DOCTOR" ? "Dr. Demo" : "Patient Demo",
     email,
     role,
-    emailVerified: role === "doctor",
+    emailVerified: role === "DOCTOR",
   };
 };
 
@@ -45,12 +46,14 @@ const sanitizeBaseUrl = (base: string | undefined) =>
 const BASE_URL = sanitizeBaseUrl(API_BASE_URL);
 
 // Helper to attach Authorization header for protected calls
-export const authHeaders = (token: string | null | undefined) =>
+export const authHeaders = (
+  token: string | null | undefined,
+): HeadersInit | undefined =>
   token
     ? {
         Authorization: `Bearer ${token}`,
       }
-    : {};
+    : undefined;
 
 async function request<T>(path: string, init: RequestInit): Promise<T> {
   const response = await fetch(`${BASE_URL}${path}`, {
@@ -113,7 +116,11 @@ export async function login(payload: LoginPayload): Promise<LoginResponse> {
   });
 
   const role: UserRole =
-    backend.role?.toLowerCase() === "doctor" ? "doctor" : "patient";
+    backend.role?.toUpperCase() === "DOCTOR"
+      ? "DOCTOR"
+      : backend.role?.toUpperCase() === "ADMIN"
+        ? "ADMIN"
+        : "PATIENT";
 
   return {
     token: backend.token,
@@ -151,10 +158,7 @@ export async function register(
 
   console.log('here');
 
-  const backendRole =
-    payload.role === "doctor"
-      ? "DOCTOR"
-      : "PATIENT";
+  const backendRole = payload.role;
         
 
 

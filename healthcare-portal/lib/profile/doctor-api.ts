@@ -1,30 +1,10 @@
 // lib/profile/doctor-api.ts
-import { ApiError } from "@/lib/auth/api";
+import { ApiError, authHeaders } from "@/lib/auth/api";
+import type { DoctorProfileDTO } from "@/lib/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export type DoctorProfile = {
-  firstName: string;
-  lastName: string;
-  phone: string;
-  gender: string;
-  profilePhotoBase64?: string;
-  licenseNumber: string;
-  specialization: string;
-  experience: number;
-  education: string;
-  bio: string;
-  languages: string[];
-  clinicAddress: string;
-};
-
-type BackendDoctorProfile = Omit<DoctorProfile, "phone" | "experience" | "languages"> & {
-  phone: string | null;
-  experience: number | null;
-  languages: string[] | null;
-};
-
-function normalizeProfile(profile: BackendDoctorProfile): DoctorProfile {
+function normalizeProfile(profile: DoctorProfileDTO): DoctorProfileDTO {
   return {
     ...profile,
     phone: profile.phone ?? "",
@@ -46,7 +26,7 @@ async function authedRequest<T>(
     ...init,
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(authHeaders(token) || {}),
       ...(init.headers || {}),
     },
   });
@@ -78,8 +58,8 @@ async function authedRequest<T>(
 
 export async function getDoctorProfile(
   token: string | null,
-): Promise<DoctorProfile> {
-  const backend = await authedRequest<BackendDoctorProfile>(
+): Promise<DoctorProfileDTO> {
+  const backend = await authedRequest<DoctorProfileDTO>(
     "/api/profile/doctor",
     token,
     { method: "GET" },
@@ -89,9 +69,9 @@ export async function getDoctorProfile(
 
 export async function updateDoctorProfile(
   token: string | null,
-  payload: DoctorProfile,
-): Promise<DoctorProfile> {
-  const backend = await authedRequest<BackendDoctorProfile>(
+  payload: DoctorProfileDTO,
+): Promise<DoctorProfileDTO> {
+  const backend = await authedRequest<DoctorProfileDTO>(
     "/api/profile/doctor",
     token,
     {

@@ -48,7 +48,7 @@ export default function DoctorLayout({ children }: DoctorLayoutProps) {
   };
 
   return (
-    <ProtectedRoute allowRoles={["doctor"]} unauthenticatedRedirect="/">
+    <ProtectedRoute allowRoles={["DOCTOR"]} unauthenticatedRedirect="/">
       <div className="flex min-h-screen flex-col bg-background">
         <DashboardNavbar
           title="Doctor Portal"

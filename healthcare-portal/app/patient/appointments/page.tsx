@@ -21,10 +21,9 @@ import {
   getAppointments,
   rescheduleAppointment,
   getAvailableSlots,
-  type Appointment,
-  type AppointmentStatus,
   type TimeSlot,
 } from "@/lib/appointments/appointments-api";
+import type { AppointmentDTO, AppointmentStatus, LocalTime } from "@/lib/types";
 
 const statusOptions: Array<{ value: AppointmentStatus | "ALL"; label: string }> =
   [
@@ -37,13 +36,15 @@ const statusOptions: Array<{ value: AppointmentStatus | "ALL"; label: string }> 
 
 export default function PatientAppointmentsPage() {
   const { user, token, isHydrating } = useAuth();
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [appointments, setAppointments] = useState<AppointmentDTO[]>([]);
   const [filters, setFilters] = useState({
     status: "ALL" as AppointmentStatus | "ALL",
     startDate: "",
     endDate: "",
   });
-  const [rescheduleTarget, setRescheduleTarget] = useState<Appointment | null>(null);
+  const [rescheduleTarget, setRescheduleTarget] = useState<AppointmentDTO | null>(
+    null,
+  );
   const [rescheduleForm, setRescheduleForm] = useState({ date: "", time: "" });
   const [slots, setSlots] = useState<Array<TimeSlot>>([]);
   const [loading, setLoading] = useState(true);
@@ -69,7 +70,7 @@ export default function PatientAppointmentsPage() {
       try {
         const appointmentData = await getAppointments(
           {
-            role: "patient",
+            role: "PATIENT",
             userId: user.id,
             status: filters.status,
             startDate: filters.startDate,
@@ -100,7 +101,7 @@ export default function PatientAppointmentsPage() {
     let alive = true;
 
     async function loadSlots() {
-      if (!rescheduleTarget || !rescheduleForm.date) {
+      if (!rescheduleTarget || !rescheduleForm.date || !rescheduleTarget.doctorId) {
         setSlots([]);
         return;
       }
@@ -125,9 +126,13 @@ export default function PatientAppointmentsPage() {
     };
   }, [rescheduleTarget, rescheduleForm.date, token]);
 
-  async function handleCancel(id: string) {
+  async function handleCancel(id?: string) {
     if (!confirm("Cancel this appointment?")) return;
     if (!user) return;
+    if (!id) {
+      setError("Appointment ID is missing.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
     setSuccess(null);
@@ -136,7 +141,7 @@ export default function PatientAppointmentsPage() {
       setSuccess("Appointment cancelled.");
       const updated = await getAppointments(
         {
-          role: "patient",
+            role: "PATIENT",
           userId: user.id,
           status: filters.status,
           startDate: filters.startDate,
@@ -154,17 +159,17 @@ export default function PatientAppointmentsPage() {
     }
   }
 
-  function beginReschedule(appointment: Appointment) {
+  function beginReschedule(appointment: AppointmentDTO) {
     setRescheduleTarget(appointment);
     setRescheduleForm({
-      date: appointment.appointmentDate ?? appointment.date ?? "",
-      time: appointment.startTime?.slice(0, 5) ?? appointment.time ?? "",
+      date: appointment.appointmentDate ?? "",
+      time: formatLocalTime(appointment.startTime),
     });
   }
 
   async function handleRescheduleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!user || !rescheduleTarget) return;
+    if (!user || !rescheduleTarget?.id) return;
     setSubmitting(true);
     setError(null);
     setSuccess(null);
@@ -174,7 +179,7 @@ export default function PatientAppointmentsPage() {
       setRescheduleTarget(null);
       const updated = await getAppointments(
         {
-          role: "patient",
+            role: "PATIENT",
           userId: user.id,
           status: filters.status,
           startDate: filters.startDate,
@@ -332,60 +337,81 @@ export default function PatientAppointmentsPage() {
                 <TableColumn align="end">Actions</TableColumn>
               </TableHeader>
               <TableBody items={appointments}>
-                {(appointment) => (
-                  <TableRow key={appointment.id}>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{appointment.doctorName}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {appointment.doctorSpecialization ?? appointment.specialty}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col text-sm">
-                        <span>
-                          {appointment.appointmentDate ?? appointment.date}
-                        </span>
-                        <span className="text-xs text-default-500">
-                          {formatTimeRange(
-                            appointment.startTime ?? appointment.time,
-                            appointment.endTime,
-                          )}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <StatusChip status={appointment.status} />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2 justify-end">
-                        {appointment.status !== "CANCELLED" &&
-                          appointment.status !== "COMPLETED" && (
-                            <>
-                              <Button
-                                size="sm"
-                                variant="flat"
-                                onPress={() => beginReschedule(appointment)}
-                                isDisabled={submitting}
+                {(appointment) => {
+                  const appointmentStatus = appointment.status ?? "PENDING";
+                  const appointmentKey =
+                    appointment.id ??
+                    `${appointment.doctorId ?? "apt"}-${
+                      appointment.appointmentDate ?? "date"
+                    }`;
+                  return (
+                    <TableRow key={appointmentKey}>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium">
+                            {appointment.doctorName ?? "—"}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {appointment.doctorSpecialization ?? "—"}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col text-sm">
+                          <span>{appointment.appointmentDate ?? "—"}</span>
+                          <span className="text-xs text-default-500">
+                            {formatTimeRange(
+                              appointment.startTime,
+                              appointment.endTime,
+                            )}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <StatusChip status={appointmentStatus} />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2 justify-end">
+                          {appointmentStatus !== "CANCELLED" &&
+                            appointmentStatus !== "COMPLETED" && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="flat"
+                                  onPress={() =>
+                                    appointment.id && beginReschedule(appointment)
+                                  }
+                                  isDisabled={submitting}
+                                >
+                                  Reschedule
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  color="danger"
+                                  variant="flat"
+                                  onPress={() => handleCancel(appointment.id)}
+                                  isDisabled={submitting || !appointment.id}
+                                >
+                                  Cancel
+                                </Button>
+                              </>
+                            )}
+                          {appointmentStatus === "COMPLETED" &&
+                            appointment.doctorId &&
+                            appointment.id && (
+                              <Link
+                                href={`/patient/doctors/${appointment.doctorId}?review=1&appointmentId=${appointment.id}`}
                               >
-                                Reschedule
-                              </Button>
-                              <Button
-                                size="sm"
-                                color="danger"
-                                variant="flat"
-                                onPress={() => handleCancel(appointment.id)}
-                                isDisabled={submitting}
-                              >
-                                Cancel
-                              </Button>
-                            </>
-                          )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
+                                <Button size="sm" variant="flat">
+                                  Leave Review
+                                </Button>
+                              </Link>
+                            )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                }}
               </TableBody>
             </Table>
           )}
@@ -399,8 +425,8 @@ export default function PatientAppointmentsPage() {
             <div>
               <h2 className="text-lg font-semibold">Reschedule Appointment</h2>
               <p className="text-sm text-default-500">
-                Dr. {rescheduleTarget.doctorName} on{" "}
-                {rescheduleTarget.appointmentDate ?? rescheduleTarget.date}
+                Dr. {rescheduleTarget.doctorName ?? "—"} on{" "}
+                {rescheduleTarget.appointmentDate ?? "—"}
               </p>
             </div>
           </CardHeader>
@@ -478,11 +504,21 @@ export default function PatientAppointmentsPage() {
   );
 }
 
-function formatTimeRange(start?: string, end?: string) {
-  if (!start) return "";
-  const startLabel = start.slice(0, 5);
-  if (!end) return startLabel;
-  const endLabel = end.slice(0, 5);
+function formatLocalTime(time?: LocalTime | string) {
+  if (!time) return "";
+  if (typeof time === "string") {
+    return time.slice(0, 5);
+  }
+  const hour = time.hour ?? 0;
+  const minute = time.minute ?? 0;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+function formatTimeRange(start?: LocalTime | string, end?: LocalTime | string) {
+  const startLabel = formatLocalTime(start);
+  if (!startLabel) return "";
+  const endLabel = formatLocalTime(end);
+  if (!endLabel) return startLabel;
   return `${startLabel} - ${endLabel}`;
 }
 

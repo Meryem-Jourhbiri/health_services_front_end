@@ -1,16 +1,8 @@
 // lib/availability/availability-api.ts
-import { ApiError } from "@/lib/auth/api";
+import { ApiError, authHeaders } from "@/lib/auth/api";
+import type { DayOfWeek, UnavailabilityDTO } from "@/lib/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-export type DayOfWeek =
-  | "MONDAY"
-  | "TUESDAY"
-  | "WEDNESDAY"
-  | "THURSDAY"
-  | "FRIDAY"
-  | "SATURDAY"
-  | "SUNDAY";
 
 export type AvailabilitySchedule = {
   id: string;
@@ -24,12 +16,7 @@ export type AvailabilitySchedule = {
 
 export type AvailabilityPayload = Omit<AvailabilitySchedule, "id">;
 
-export type UnavailabilityPeriod = {
-  id: string;
-  startDate: string;
-  endDate: string;
-  reason: string;
-};
+export type UnavailabilityPeriod = UnavailabilityDTO;
 
 export type UnavailabilityPayload = Omit<UnavailabilityPeriod, "id">;
 
@@ -78,8 +65,6 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
   return (await res.json()) as T;
 }
 
-const authHeaders = (token: string | null) =>
-  token ? { Authorization: `Bearer ${token}` } : {};
 
 export async function createAvailability(
   token: string | null,

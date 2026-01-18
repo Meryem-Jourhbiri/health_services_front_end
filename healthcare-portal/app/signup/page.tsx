@@ -7,7 +7,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
-import type { RegisterPayload, UserRole } from "@/lib/auth/types";
+import type { RegisterPayload } from "@/lib/auth/types";
+import type { UserRole } from "@/lib/types";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function SignUpPage() {
     phone: "",
     gender: "",
     dob: "",
-    role: "patient",
+    role: "PATIENT",
     licenseNumber: "",
     specialization: "",
     experience: undefined,
@@ -38,9 +39,9 @@ export default function SignUpPage() {
       ...current,
       role,
       // reset doctor fields when switching back to patient
-      licenseNumber: role === "doctor" ? current.licenseNumber : "",
-      specialization: role === "doctor" ? current.specialization : "",
-      experience: role === "doctor" ? current.experience : undefined,
+      licenseNumber: role === "DOCTOR" ? current.licenseNumber : "",
+      specialization: role === "DOCTOR" ? current.specialization : "",
+      experience: role === "DOCTOR" ? current.experience : undefined,
     }));
   };
 
@@ -61,7 +62,7 @@ export default function SignUpPage() {
     }
 
     if (
-      formValues.role === "doctor" &&
+      formValues.role === "DOCTOR" &&
       (!formValues.licenseNumber || !formValues.specialization)
     ) {
       setError("License number and specialization are required for doctors.");
@@ -100,9 +101,9 @@ export default function SignUpPage() {
                 <input
                   type="radio"
                   name="role"
-                  value="patient"
-                  checked={formValues.role === "patient"}
-                  onChange={() => handleRoleChange("patient")}
+                  value="PATIENT"
+                  checked={formValues.role === "PATIENT"}
+                  onChange={() => handleRoleChange("PATIENT")}
                 />
                 Patient
               </label>
@@ -110,9 +111,9 @@ export default function SignUpPage() {
                 <input
                   type="radio"
                   name="role"
-                  value="doctor"
-                  checked={formValues.role === "doctor"}
-                  onChange={() => handleRoleChange("doctor")}
+                  value="DOCTOR"
+                  checked={formValues.role === "DOCTOR"}
+                  onChange={() => handleRoleChange("DOCTOR")}
                 />
                 Doctor
               </label>
@@ -195,7 +196,7 @@ export default function SignUpPage() {
                 required
               />
             </div>
-            {formValues.role === "doctor" ? (
+            {formValues.role === "DOCTOR" ? (
               <div className="grid gap-3 md:grid-cols-2">
                 <Input
                   label="License number"

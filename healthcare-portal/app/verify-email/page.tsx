@@ -5,8 +5,9 @@ import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Input } from "@heroui/input";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
+import AuthPageSkeleton from "@/components/auth/AuthPageSkeleton";
 
 type Status = "pending" | "success" | "expired";
 
@@ -35,7 +36,7 @@ const STATUS_CONFIG: Record<
   },
 };
 
-export default function VerifyEmailPage() {
+function VerifyEmailForm() {
   const searchParams = useSearchParams();
   const initialStatus = (searchParams.get("status") as Status) ?? "pending";
   const presetToken = searchParams.get("token") ?? "";
@@ -152,5 +153,15 @@ export default function VerifyEmailPage() {
         </CardBody>
       </Card>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense
+      fallback={<AuthPageSkeleton />}
+    >
+      <VerifyEmailForm />
+    </Suspense>
   );
 }

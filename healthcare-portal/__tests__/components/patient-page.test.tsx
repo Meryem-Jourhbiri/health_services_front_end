@@ -5,8 +5,8 @@ import "@testing-library/jest-dom";
 jest.mock("@/lib/auth/auth-context", () => ({
   __esModule: true,
   useAuth: () => ({
-    user: { id: "1", name: "Test Patient", role: "patient" },
-    role: "patient",
+    user: { id: "1", name: "Test Patient", role: "PATIENT" },
+    role: "PATIENT",
     isAuthenticated: true,
     isHydrating: false,
     login: jest.fn(),
@@ -28,5 +28,4 @@ describe("PatientPage", () => {
     expect(screen.getByText(/quick actions/i)).toBeInTheDocument();
   });
 });
-
 

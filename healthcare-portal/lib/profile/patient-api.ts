@@ -1,33 +1,17 @@
 // lib/profile/patient-api.ts
-import { ApiError } from "@/lib/auth/api";
+import { ApiError, authHeaders } from "@/lib/auth/api";
+import type { PatientProfileDTO } from "@/lib/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export type PatientProfile = {
-  firstName: string;
-  lastName: string;
-  dob: string; // YYYY-MM-DD
-  phone: string;
-  address: string;
-  gender: string;
-  insuranceInfo: string;
-  medicalHistory: Record<string, unknown>;
-  profilePhotoBase64?: string;
-};
-
-type BackendPatientProfile = Omit<PatientProfile, "phone" | "address" | "insuranceInfo"> & {
-  phone: string | null;
-  address: string | null;
-  insuranceInfo: string | null;
-};
-
-function normalizeProfile(p: BackendPatientProfile): PatientProfile {
+function normalizeProfile(p: PatientProfileDTO): PatientProfileDTO {
   return {
     ...p,
     phone: p.phone ?? "",
     address: p.address ?? "",
     insuranceInfo: p.insuranceInfo ?? "",
-    medicalHistory: (p.medicalHistory ?? {}) as Record<string, unknown>,
+    medicalHistory:
+      (p.medicalHistory ?? {}) as Record<string, Record<string, unknown>>,
   };
 }
 
@@ -44,7 +28,7 @@ async function authedRequest<T>(
     ...init,
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(authHeaders(token) || {}),
       ...(init.headers || {}),
     },
   });
@@ -74,21 +58,30 @@ async function authedRequest<T>(
   return (await res.json()) as T;
 }
 
-export async function getPatientProfile(token: string | null): Promise<PatientProfile> {
-  const backend = await authedRequest<BackendPatientProfile>("/api/profile/patient", token, {
-    method: "GET",
-  });
+export async function getPatientProfile(
+  token: string | null,
+): Promise<PatientProfileDTO> {
+  const backend = await authedRequest<PatientProfileDTO>(
+    "/api/profile/patient",
+    token,
+    {
+      method: "GET",
+    },
+  );
   return normalizeProfile(backend);
 }
 
 export async function updatePatientProfile(
   token: string | null,
-  payload: PatientProfile,
-): Promise<PatientProfile> {
-  const backend = await authedRequest<BackendPatientProfile>("/api/profile/patient", token, {
-    method: "PUT",
-    body: JSON.stringify(payload),
-  });
+  payload: PatientProfileDTO,
+): Promise<PatientProfileDTO> {
+  const backend = await authedRequest<PatientProfileDTO>(
+    "/api/profile/patient",
+    token,
+    {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    },
+  );
   return normalizeProfile(backend);
 }
-
