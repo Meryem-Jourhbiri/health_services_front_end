@@ -32,10 +32,10 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-background/80 to-background px-4 py-10">
+    <div className="theme-public flex min-h-screen items-center justify-center bg-gradient-to-b from-background/80 to-background px-4 py-10">
       <Card className="w-full max-w-md border border-default-100 bg-content1/80 backdrop-blur">
         <CardHeader className="flex flex-col items-start gap-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-default-500">
+          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-primary">
             Account recovery
           </p>
           <div>
@@ -90,7 +90,7 @@ export default function ForgotPasswordPage() {
           {status ? (
             <Button
               as={Link}
-              href={`/reset-password${
+              href={`/auth/reset-password${
                 code.trim()
                   ? `?token=${encodeURIComponent(code.trim())}`
                   : ""
@@ -104,7 +104,7 @@ export default function ForgotPasswordPage() {
           ) : null}
           <p className="mt-6 text-center text-sm text-default-500">
             Remembered it?{" "}
-            <Link href="/login" className="font-semibold text-primary">
+            <Link href="/auth/login" className="font-semibold text-primary">
               Back to login
             </Link>
           </p>

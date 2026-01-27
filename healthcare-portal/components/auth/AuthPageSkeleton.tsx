@@ -2,7 +2,7 @@ import { Card, CardBody, CardHeader } from "@heroui/card";
 
 export default function AuthPageSkeleton() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-background/80 to-background px-4 py-10">
+    <div className="theme-public flex min-h-screen items-center justify-center bg-gradient-to-b from-background/80 to-background px-4 py-10">
       <Card className="w-full max-w-md border border-default-100 bg-content1/80 backdrop-blur">
         <CardHeader className="flex flex-col items-start gap-2">
           <div className="h-3 w-28 rounded-full bg-default-200" />

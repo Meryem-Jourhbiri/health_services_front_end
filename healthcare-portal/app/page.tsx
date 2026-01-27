@@ -6,15 +6,15 @@ import Link from 'next/link';
 
 export default function HomePage() {
   return (
-    <main className="homepage-saas relative min-h-screen overflow-hidden bg-background text-foreground">
+    <main className="homepage-saas theme-public relative min-h-screen overflow-hidden bg-background text-foreground">
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Onest:wght@400;500;600;700&display=swap');
 
         .homepage-saas {
-          --saas-mint: #2dd4bf;
-          --saas-sky: #7dd3fc;
-          --saas-coral: #fb7185;
-          --saas-ink: #0b1015;
+          --saas-mint: hsl(var(--heroui-primary));
+          --saas-sky: hsl(var(--heroui-secondary));
+          --saas-coral: hsl(var(--heroui-danger));
+          --saas-ink: hsl(var(--heroui-background));
           font-family: 'Onest', 'Avenir Next', 'Segoe UI', sans-serif;
         }
 
@@ -44,15 +44,15 @@ export default function HomePage() {
         }
       `}</style>
 
-      <div className="pointer-events-none absolute -top-24 right-0 h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle_at_center,rgba(45,212,191,0.35),transparent_70%)] blur-3xl" />
-      <div className="pointer-events-none absolute left-0 top-40 h-[360px] w-[360px] rounded-full bg-[radial-gradient(circle_at_center,rgba(125,211,252,0.25),transparent_70%)] blur-3xl" />
-      <div className="pointer-events-none absolute bottom-0 right-16 h-[320px] w-[320px] rounded-full bg-[radial-gradient(circle_at_center,rgba(251,113,133,0.22),transparent_70%)] blur-3xl" />
+      <div className="pointer-events-none absolute -top-24 right-0 h-[420px] w-[420px] rounded-full bg-[radial-gradient(circle_at_center,hsl(var(--heroui-primary)/0.35),transparent_70%)] blur-3xl" />
+      <div className="pointer-events-none absolute left-0 top-40 h-[360px] w-[360px] rounded-full bg-[radial-gradient(circle_at_center,hsl(var(--heroui-secondary)/0.25),transparent_70%)] blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 right-16 h-[320px] w-[320px] rounded-full bg-[radial-gradient(circle_at_center,hsl(var(--heroui-danger)/0.22),transparent_70%)] blur-3xl" />
 
-      <header className="relative z-10 px-6 pb-16 pt-10 md:px-10 lg:px-16">
+      <header className="relative z-10 border-b border-default-100 bg-content1 px-6 pb-16 pt-10 md:px-10 lg:px-16">
         <nav className="mx-auto flex max-w-6xl items-center justify-between">
           <div className="flex items-center gap-3 text-sm uppercase tracking-[0.3em] text-default-500">
             <span className="h-2 w-2 rounded-full bg-[color:var(--saas-mint)]" />
-            Careflow Cloud
+            Healthcare Portal
           </div>
           <div className="hidden items-center gap-6 text-sm text-default-400 md:flex">
             <Link href="#features" className="transition hover:text-foreground">
@@ -70,7 +70,7 @@ export default function HomePage() {
           </div>
           <Button
             as={Link}
-            href="/login"
+            href="/auth/login"
             variant="bordered"
             radius="full"
             className="border-default-400/60 text-foreground"
@@ -99,7 +99,7 @@ export default function HomePage() {
             <div className="flex flex-wrap items-center gap-4">
               <Button
                 as={Link}
-                href="/signup"
+                href="/auth/signup"
                 color="primary"
                 size="lg"
                 radius="full"
@@ -109,7 +109,7 @@ export default function HomePage() {
               </Button>
               <Button
                 as={Link}
-                href="/login"
+                href="/auth/login"
                 variant="bordered"
                 size="lg"
                 radius="full"
@@ -207,7 +207,7 @@ export default function HomePage() {
               Every service line, finally in sync.
             </h2>
           </div>
-          <Button as={Link} href="/signup" variant="bordered" radius="full">
+          <Button as={Link} href="/auth/signup" variant="bordered" radius="full">
             See it in action
           </Button>
         </div>
@@ -365,7 +365,7 @@ export default function HomePage() {
           <div className="mt-6 flex flex-wrap justify-center gap-4">
             <Button
               as={Link}
-              href="/signup"
+              href="/auth/signup"
               color="primary"
               size="lg"
               radius="full"
@@ -373,7 +373,7 @@ export default function HomePage() {
             >
               Create your account
             </Button>
-            <Button as={Link} href="/login" variant="bordered" radius="full">
+            <Button as={Link} href="/auth/login" variant="bordered" radius="full">
               Log in
             </Button>
           </div>

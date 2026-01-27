@@ -1,29 +1,29 @@
-"use client";
+'use client';
 
-import { Button } from "@heroui/button";
-import { Card, CardBody, CardHeader } from "@heroui/card";
-import { Input } from "@heroui/input";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { useAuth } from "@/lib/auth/auth-context";
-import type { RegisterPayload } from "@/lib/auth/types";
-import type { UserRole } from "@/lib/types";
+import { Button } from '@heroui/button';
+import { Card, CardBody, CardHeader } from '@heroui/card';
+import { Input } from '@heroui/input';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useAuth } from '@/lib/auth/auth-context';
+import type { RegisterPayload } from '@/lib/auth/types';
+import type { UserRole } from '@/lib/types';
 
 export default function SignUpPage() {
   const router = useRouter();
   const { register, isSubmitting, setVerificationEmail } = useAuth();
   const [formValues, setFormValues] = useState<RegisterPayload>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    phone: "",
-    gender: "",
-    dob: "",
-    role: "PATIENT",
-    licenseNumber: "",
-    specialization: "",
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    phone: '',
+    gender: '',
+    dob: '',
+    role: 'PATIENT',
+    licenseNumber: '',
+    specialization: '',
     experience: undefined,
   });
   const [error, setError] = useState<string | null>(null);
@@ -39,9 +39,9 @@ export default function SignUpPage() {
       ...current,
       role,
       // reset doctor fields when switching back to patient
-      licenseNumber: role === "DOCTOR" ? current.licenseNumber : "",
-      specialization: role === "DOCTOR" ? current.specialization : "",
-      experience: role === "DOCTOR" ? current.experience : undefined,
+      licenseNumber: role === 'DOCTOR' ? current.licenseNumber : '',
+      specialization: role === 'DOCTOR' ? current.specialization : '',
+      experience: role === 'DOCTOR' ? current.experience : undefined,
     }));
   };
 
@@ -56,36 +56,36 @@ export default function SignUpPage() {
 
     if (!passwordValid) {
       setError(
-        "Password must be at least 8 characters, include an uppercase letter and a number.",
+        'Password must be at least 8 characters, include an uppercase letter and a number.',
       );
       return;
     }
 
     if (
-      formValues.role === "DOCTOR" &&
+      formValues.role === 'DOCTOR' &&
       (!formValues.licenseNumber || !formValues.specialization)
     ) {
-      setError("License number and specialization are required for doctors.");
+      setError('License number and specialization are required for doctors.');
       return;
     }
 
     try {
       await register({ ...formValues, role: formValues.role });
       setVerificationEmail(formValues.email);
-      router.push(`/verify-email?status=pending&email=${formValues.email}`);
+      router.push(`/auth/verify-email?status=pending&email=${formValues.email}`);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Unable to create the account.",
+        err instanceof Error ? err.message : 'Unable to create the account.',
       );
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-background/80 to-background px-4 py-10">
+    <div className="theme-public flex min-h-screen items-center justify-center bg-gradient-to-b from-background/80 to-background px-4 py-10">
       <Card className="w-full max-w-md border border-default-100 bg-content1/80 backdrop-blur">
         <CardHeader className="flex flex-col items-start gap-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-success-500">
-            Patient access
+          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-primary">
+            Account access
           </p>
           <div>
             <h1 className="text-2xl font-semibold">Create your account</h1>
@@ -102,8 +102,8 @@ export default function SignUpPage() {
                   type="radio"
                   name="role"
                   value="PATIENT"
-                  checked={formValues.role === "PATIENT"}
-                  onChange={() => handleRoleChange("PATIENT")}
+                  checked={formValues.role === 'PATIENT'}
+                  onChange={() => handleRoleChange('PATIENT')}
                 />
                 Patient
               </label>
@@ -112,8 +112,8 @@ export default function SignUpPage() {
                   type="radio"
                   name="role"
                   value="DOCTOR"
-                  checked={formValues.role === "DOCTOR"}
-                  onChange={() => handleRoleChange("DOCTOR")}
+                  checked={formValues.role === 'DOCTOR'}
+                  onChange={() => handleRoleChange('DOCTOR')}
                 />
                 Doctor
               </label>
@@ -196,7 +196,7 @@ export default function SignUpPage() {
                 required
               />
             </div>
-            {formValues.role === "DOCTOR" ? (
+            {formValues.role === 'DOCTOR' ? (
               <div className="grid gap-3 md:grid-cols-2">
                 <Input
                   label="License number"
@@ -221,7 +221,7 @@ export default function SignUpPage() {
                   value={
                     formValues.experience !== undefined
                       ? String(formValues.experience)
-                      : ""
+                      : ''
                   }
                   onChange={(e) =>
                     setFormValues((current) => ({
@@ -249,7 +249,8 @@ export default function SignUpPage() {
                 minLength={8}
               />
               <p className="text-xs text-default-500">
-                Use at least 8 characters with one uppercase letter and one number.
+                Use at least 8 characters with one uppercase letter and one
+                number.
               </p>
             </div>
             {error ? (
@@ -268,8 +269,8 @@ export default function SignUpPage() {
             </Button>
           </form>
           <p className="mt-6 text-center text-sm text-default-500">
-            Already registered?{" "}
-            <Link href="/login" className="font-semibold text-primary">
+            Already registered?{' '}
+            <Link href="/auth/login" className="font-semibold text-primary">
               Log in
             </Link>
           </p>

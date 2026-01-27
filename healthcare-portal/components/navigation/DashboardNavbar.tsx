@@ -32,7 +32,10 @@ export function DashboardNavbar(props: DashboardNavbarProps) {
   const pathname = usePathname();
 
   return (
-    <Navbar maxWidth="full">
+    <Navbar
+      maxWidth="full"
+      className="border-b border-default-100 bg-content1"
+    >
       <NavbarBrand>
         <span className="font-semibold text-lg">{title}</span>
       </NavbarBrand>

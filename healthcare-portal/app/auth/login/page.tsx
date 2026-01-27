@@ -55,7 +55,7 @@ function LoginForm() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-background/80 to-background px-4 py-10">
+    <div className="theme-public flex min-h-screen items-center justify-center bg-gradient-to-b from-background/80 to-background px-4 py-10">
       <Card className="w-full max-w-md border border-default-100 bg-content1/80 backdrop-blur">
         <CardHeader className="flex flex-col items-start gap-2">
           <p className="text-xs font-semibold uppercase tracking-[0.4em] text-primary">
@@ -91,7 +91,7 @@ function LoginForm() {
               autoComplete="current-password"
               endContent={
                 <Link
-                  href="/forgot-password"
+                  href="/auth/forgot-password"
                   className="text-xs font-semibold text-primary"
                 >
                   Forgot?
@@ -115,7 +115,7 @@ function LoginForm() {
           </form>
           <p className="mt-6 text-center text-sm text-default-500">
             Patient without an account?{" "}
-            <Link href="/signup" className="font-semibold text-primary">
+            <Link href="/auth/signup" className="font-semibold text-primary">
               Create one now
             </Link>
           </p>
