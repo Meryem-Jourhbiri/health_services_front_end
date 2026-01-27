@@ -16,7 +16,9 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
           </Link>
         </div>
       </header>
-      <main className="flex-1">{children}</main>
+      <main className="flex-1" suppressHydrationWarning>
+        {children}
+      </main>
     </div>
   );
 }

@@ -1,16 +1,20 @@
 // components/navigation/DashboardNavbar.tsx
-"use client";
+'use client';
 
-import { Avatar } from "@heroui/avatar";
-import { Button } from "@heroui/button";
+import { Avatar } from '@heroui/avatar';
+import { Button } from '@heroui/button';
 import {
   Navbar,
   NavbarBrand,
   NavbarContent,
   NavbarItem,
-} from "@heroui/navbar";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+  NavbarMenu,
+  NavbarMenuItem,
+  NavbarMenuToggle,
+} from '@heroui/navbar';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 
 type NavLink = {
   href: string;
@@ -27,15 +31,28 @@ type DashboardNavbarProps = {
 };
 
 export function DashboardNavbar(props: DashboardNavbarProps) {
-  const { title, onLogout, avatarLabel, avatarSrc, userName, links = [] } =
-    props;
+  const {
+    title,
+    onLogout,
+    avatarLabel,
+    avatarSrc,
+    userName,
+    links = [],
+  } = props;
   const pathname = usePathname();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <Navbar
       maxWidth="full"
       className="border-b border-default-100 bg-content1"
+      isMenuOpen={isMenuOpen}
+      onMenuOpenChange={setIsMenuOpen}
     >
+      <NavbarContent className="sm:hidden" justify="start">
+        <NavbarMenuToggle aria-label="Open navigation menu" />
+      </NavbarContent>
+
       <NavbarBrand>
         <span className="font-semibold text-lg">{title}</span>
       </NavbarBrand>
@@ -53,7 +70,7 @@ export function DashboardNavbar(props: DashboardNavbarProps) {
       </NavbarContent>
 
       <NavbarContent justify="end">
-        <NavbarItem>
+        <NavbarItem className="hidden sm:flex">
           <Button variant="light" size="sm" color="danger" onPress={onLogout}>
             Sign out
           </Button>
@@ -77,6 +94,30 @@ export function DashboardNavbar(props: DashboardNavbarProps) {
           </NavbarItem>
         ) : null}
       </NavbarContent>
+
+      <NavbarMenu>
+        {links.map((l) => (
+          <NavbarMenuItem key={l.href} isActive={pathname === l.href}>
+            <Link
+              className={pathname === l.href ? 'text-primary' : ''}
+              href={l.href}
+            >
+              {l.label}
+            </Link>
+          </NavbarMenuItem>
+        ))}
+        <NavbarMenuItem>
+          <Button
+            variant="light"
+            size="sm"
+            color="danger"
+            onPress={onLogout}
+            className="w-full justify-start"
+          >
+            Sign out
+          </Button>
+        </NavbarMenuItem>
+      </NavbarMenu>
     </Navbar>
   );
 }
