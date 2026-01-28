@@ -54,7 +54,7 @@ export default function HomePage() {
             <span className="h-2 w-2 rounded-full bg-[color:var(--saas-mint)]" />
             Healthcare Portal
           </div>
-          <div className="hidden items-center gap-6 text-sm text-default-400 md:flex">
+          {/* <div className="hidden items-center gap-6 text-sm text-default-400 md:flex">
             <Link href="#features" className="transition hover:text-foreground">
               Features
             </Link>
@@ -67,7 +67,7 @@ export default function HomePage() {
             <Link href="#pricing" className="transition hover:text-foreground">
               Pricing
             </Link>
-          </div>
+          </div> */}
           <Button
             as={Link}
             href="/auth/login"
@@ -194,160 +194,7 @@ export default function HomePage() {
         </section>
       </header>
 
-      <section
-        id="features"
-        className="relative z-10 mx-auto max-w-6xl px-6 pb-20 md:px-10 lg:px-16"
-      >
-        <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-default-400">
-              Platform highlights
-            </p>
-            <h2 className="display-font mt-3 text-3xl font-semibold md:text-4xl">
-              Every service line, finally in sync.
-            </h2>
-          </div>
-          <Button as={Link} href="/auth/signup" variant="bordered" radius="full">
-            See it in action
-          </Button>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {[
-            {
-              title: 'Smart scheduling',
-              description:
-                'Auto-fill open slots, surface conflicts, and nudge patients with real-time text reminders.',
-            },
-            {
-              title: 'Digital intake',
-              description:
-                'Collect histories, insurance cards, and consent forms before the visit begins.',
-            },
-            {
-              title: 'Care team handoffs',
-              description:
-                'Route notes and tasks automatically so every handoff stays on track.',
-            },
-            {
-              title: 'Revenue clarity',
-              description:
-                'Track claims, denials, and copays from one clean billing timeline.',
-            },
-            {
-              title: 'Patient messaging',
-              description:
-                'Two-way SMS and secure chat keep patients moving through their care plan.',
-            },
-            {
-              title: 'Performance analytics',
-              description:
-                'See utilization, capacity, and patient outcomes on a single executive dashboard.',
-            },
-          ].map((feature, index) => (
-            <Card
-              key={feature.title}
-              className="border border-default-100/40 bg-content1/60 backdrop-blur"
-              style={{
-                animation: 'fade-up 0.7s ease-out both',
-                animationDelay: `${index * 100}ms`,
-              }}
-            >
-              <CardHeader className="flex flex-col items-start gap-2">
-                <span className="text-xs uppercase tracking-[0.3em] text-default-400">
-                  0{index + 1}
-                </span>
-                <h3 className="text-lg font-semibold">{feature.title}</h3>
-              </CardHeader>
-              <CardBody className="text-sm text-default-400">
-                {feature.description}
-              </CardBody>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      <section
-        id="workflow"
-        className="relative z-10 mx-auto max-w-6xl px-6 pb-20 md:px-10 lg:px-16"
-      >
-        <div className="grid gap-10 rounded-[32px] border border-default-100/40 bg-content1/60 p-10 backdrop-blur lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-          <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-default-400">
-              Workflow
-            </p>
-            <h2 className="display-font mt-3 text-3xl font-semibold md:text-4xl">
-              A calmer day for every clinical team.
-            </h2>
-            <p className="mt-4 text-sm text-default-400 md:text-base">
-              Assign work automatically, track SLA deadlines, and send proactive
-              updates to patients without chasing spreadsheets.
-            </p>
-          </div>
-          <div className="grid gap-4">
-            {[
-              'One unified queue for scheduling, triage, and outreach.',
-              'Care plans that auto-trigger reminders and follow-ups.',
-              'Unified notes so everyone sees the full patient story.',
-            ].map((item, index) => (
-              <div
-                key={item}
-                className="flex items-center gap-3 rounded-2xl border border-default-200/40 bg-background/70 px-4 py-3 text-sm text-default-300"
-                style={{
-                  animation: 'fade-up 0.7s ease-out both',
-                  animationDelay: `${index * 120}ms`,
-                }}
-              >
-                <span className="h-2 w-2 rounded-full bg-[color:var(--saas-coral)]" />
-                {item}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section
-        id="security"
-        className="relative z-10 mx-auto max-w-6xl px-6 pb-20 md:px-10 lg:px-16"
-      >
-        <div className="grid gap-6 md:grid-cols-3">
-          {[
-            {
-              title: 'HIPAA-aligned',
-              description:
-                'Audit-ready logs, encrypted data, and secure session controls.',
-            },
-            {
-              title: 'Role-based access',
-              description:
-                'Granular permissions keep clinicians focused and data protected.',
-            },
-            {
-              title: 'Always-on monitoring',
-              description:
-                'Real-time alerts for anomalies, downtime, and workflow lag.',
-            },
-          ].map((item, index) => (
-            <Card
-              key={item.title}
-              className="border border-default-100/40 bg-content1/60 backdrop-blur"
-              style={{
-                animation: 'fade-up 0.7s ease-out both',
-                animationDelay: `${index * 120}ms`,
-              }}
-            >
-              <CardHeader>
-                <h3 className="text-lg font-semibold">{item.title}</h3>
-              </CardHeader>
-              <CardBody className="text-sm text-default-400">
-                {item.description}
-              </CardBody>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      <section
+      {/* <section
         id="pricing"
         className="relative z-10 mx-auto max-w-6xl px-6 pb-24 md:px-10 lg:px-16"
       >
@@ -373,12 +220,17 @@ export default function HomePage() {
             >
               Create your account
             </Button>
-            <Button as={Link} href="/auth/login" variant="bordered" radius="full">
+            <Button
+              as={Link}
+              href="/auth/login"
+              variant="bordered"
+              radius="full"
+            >
               Log in
             </Button>
           </div>
         </div>
-      </section>
+      </section> */}
     </main>
   );
 }
