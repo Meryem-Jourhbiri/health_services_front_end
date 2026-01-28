@@ -46,5 +46,19 @@ export default heroui({
         danger: "#ef4444",
       },
     },
+    "theme-admin": {
+      extend: "dark",
+      colors: {
+        background: "#0b0f14",
+        foreground: "#f8fafc",
+        content1: "#111827",
+        content2: "#1f2937",
+        primary: "#38bdf8",
+        secondary: "#f472b6",
+        success: "#22c55e",
+        warning: "#f59e0b",
+        danger: "#ef4444",
+      },
+    },
   },
 });
