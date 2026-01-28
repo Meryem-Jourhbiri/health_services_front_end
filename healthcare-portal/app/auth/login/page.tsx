@@ -43,11 +43,13 @@ function LoginForm() {
     try {
       const user = await login(formValues);
       const fallback =
-        user.role === "DOCTOR"
-          ? "/doctor"
-          : user.role === "PATIENT"
-            ? "/patient"
-            : "/";
+        user.role === "ADMIN"
+          ? "/admin"
+          : user.role === "DOCTOR"
+            ? "/doctor"
+            : user.role === "PATIENT"
+              ? "/patient"
+              : "/";
       router.replace(redirectPath || fallback);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to log in.");
