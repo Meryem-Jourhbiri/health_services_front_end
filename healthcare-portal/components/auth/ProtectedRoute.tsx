@@ -13,7 +13,7 @@ type ProtectedRouteProps = {
 
 export function ProtectedRoute({
   allowRoles,
-  unauthenticatedRedirect = "/login",
+  unauthenticatedRedirect = "/auth/login",
   children,
 }: ProtectedRouteProps) {
   const router = useRouter();

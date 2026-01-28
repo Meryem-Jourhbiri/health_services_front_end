@@ -1,19 +1,18 @@
 // app/layout.tsx
-import type { Metadata } from "next";
-import type { ReactNode } from "react";
-import "./globals.css";
-import { Providers } from "./providers";
+import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
+import './globals.css';
+import { Providers } from './providers';
 
 export const metadata: Metadata = {
-  title: "Health Portal",
-  description: "Doctor & Patient portal built with Next.js and HeroUI",
+  title: 'Health Portal',
+  description: 'Doctor & Patient portal built with Next.js and HeroUI',
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     // Add "dark" here to enable HeroUI’s dark theme; use "light" or toggle class later if you want
     <html lang="en" className="dark">

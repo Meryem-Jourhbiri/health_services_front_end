@@ -75,7 +75,7 @@ function VerifyEmailForm() {
   const config = STATUS_CONFIG[status];
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-background/80 to-background px-4 py-10">
+    <div className="theme-public flex min-h-screen items-center justify-center bg-gradient-to-b from-background/80 to-background px-4 py-10">
       <Card className="w-full max-w-md border border-default-100 bg-content1/80 backdrop-blur text-center">
         <CardHeader className="flex flex-col items-center gap-3">
           <p
@@ -138,7 +138,11 @@ function VerifyEmailForm() {
           <div className="space-y-3">
             <Button
               as={Link}
-              href={email ? `/login?email=${encodeURIComponent(email)}` : "/login"}
+              href={
+                email
+                  ? `/auth/login?email=${encodeURIComponent(email)}`
+                  : "/auth/login"
+              }
               color="primary"
               radius="full"
               className="w-full"

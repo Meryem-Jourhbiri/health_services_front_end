@@ -49,7 +49,7 @@ function ResetPasswordForm() {
     try {
       const response = await resetPassword({ token: trimmedCode, password });
       setStatus(response.message);
-      setTimeout(() => router.replace("/login"), 1500);
+      setTimeout(() => router.replace("/auth/login"), 1500);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Unable to reset password.",
@@ -58,10 +58,10 @@ function ResetPasswordForm() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-background/80 to-background px-4 py-10">
+    <div className="theme-public flex min-h-screen items-center justify-center bg-gradient-to-b from-background/80 to-background px-4 py-10">
       <Card className="w-full max-w-md border border-default-100 bg-content1/80 backdrop-blur">
         <CardHeader className="flex flex-col items-start gap-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-default-500">
+          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-primary">
             Account recovery
           </p>
           <div>
@@ -122,7 +122,7 @@ function ResetPasswordForm() {
           </form>
           <p className="mt-6 text-center text-sm text-default-500">
             Done here?{" "}
-            <Link href="/login" className="font-semibold text-primary">
+            <Link href="/auth/login" className="font-semibold text-primary">
               Back to login
             </Link>
           </p>
